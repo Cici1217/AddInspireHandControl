@@ -156,13 +156,38 @@ cython_debug/
 # log
 outputs/
 
+# Personal console settings (project-relative paths; do not commit machine credentials/settings).
+/configs/console/profiles.json
+/configs/console/profiles.tmp
+profiles.json
+profiles.tmp
+/configs/console/*
+!/configs/console/README.md
+!/configs/console/*.example.json
+
+# Local credentials and deployment settings; publish templates only.
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!.env.template
+!*.env.example
+!*.env.template
+!.env.*.example
+!*.env.*.example
+.ssh/
+.secrets/
+id_rsa
+id_ed25519
+*.pem
+*.key
+
 # Ruff stuff:
 .ruff_cache/
 
 # PyPI configuration file
 .pypirc
-
-outputs/
 
 .DS_Store
 
@@ -195,6 +220,8 @@ external_dependencies/XRoboToolkit-PC-Service-Pybind/
 uv.lock
 
 # Virtual environments (created by install_scripts/)
+.venv/
+.venv_*/
 .venv_sim/
 .venv_teleop/
 .venv_data_collection/
@@ -224,8 +251,19 @@ sonic_release/
 !/gear_sonic/data/
 /gear_sonic/data/*
 !/gear_sonic/data/robot_model/
+!/gear_sonic/data/end_effectors/
 !/gear_sonic/data/robots/
 /gear_sonic/data/robots/*
 !/gear_sonic/data/robots/g1/
 /gear_sonic/data/robots/g1/*
 !/gear_sonic/data/robots/g1/inspire/
+
+# Publish only the built-in ready poses. Personal poses remain local.
+!/gear_sonic/data/poses/
+/gear_sonic/data/poses/*
+!/gear_sonic/data/poses/g1/
+/gear_sonic/data/poses/g1/*
+!/gear_sonic/data/poses/g1/README.md
+!/gear_sonic/data/poses/g1/default_stand.txt
+!/gear_sonic/data/poses/g1/arms_raised.txt
+!/gear_sonic/data/poses/g1/box_ready.txt

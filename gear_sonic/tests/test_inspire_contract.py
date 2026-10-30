@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from gear_sonic.utils.hand_control.inspire.contract import (
+from gear_sonic.devices.inspire.contract import (
     CANONICAL_LOWER_RAD,
     CANONICAL_UPPER_RAD,
     CANONICAL_VELOCITY_LIMIT_RAD_S,

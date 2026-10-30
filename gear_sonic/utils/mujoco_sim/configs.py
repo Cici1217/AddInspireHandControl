@@ -240,8 +240,8 @@ class BaseConfig(ArgsConfigTemplate):
     data_collection_frequency: int = 20
     """Data collection frequency (Hz)"""
 
-    root_output_dir: str = "outputs"
-    """Root output directory"""
+    root_output_dir: str = "outputs/datasets"
+    """Legacy dataset base; active recorders select sim/real using data_collection.paths."""
 
     offline_dc: bool = False
     """Offline data collection."""
@@ -333,17 +333,32 @@ class BaseConfig(ArgsConfigTemplate):
 class SimLoopConfig(BaseConfig):
     """Config for running the simulation loop."""
 
-    hand: Literal["dex3", "inspire"] = "dex3"
+    hand: str = "dex3"
     """Hand model and transport used by the full-body simulator."""
 
     hand_config: Optional[Path] = None
     """Inspire mapping/endpoint configuration; defaults to its packaged config."""
+
+    device_registry: Optional[Path] = None
+    """Local device package registry; defaults to the project registry."""
+
+    effector_deployment: Optional[Path] = None
+    """Device deployment configuration, including machine-specific overrides."""
+
+    initial_keyframe: Optional[str] = None
+    """Optional named MJCF startup/reset keyframe; empty preserves the existing default."""
+
+    scene: Optional[Path] = None
+    """Custom MJCF scene; preserves the selected device robot and actuators."""
 
     mp_start_method: str = "spawn"
     """Multiprocessing start method"""
 
     enable_image_publish: bool = False
     """Enable image publishing in simulation"""
+
+    enable_depth_publish: bool = False
+    """Publish lossless RGB-D for Inspire capture; requires image publishing."""
 
     camera_port: int = 5555
     """Camera port for image publishing"""

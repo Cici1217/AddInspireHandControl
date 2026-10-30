@@ -212,6 +212,12 @@ The data exporter receives data from three ZMQ sources. The C++ deployment, PICO
 
 ---
 
+## Dataset locations
+
+Current newbranch console: set the dataset root under **Common settings → Local computer → Data and output directories**, then click **Initialize directories**. The default `outputs/datasets` is relative to the selected project directory; an absolute directory is also accepted. Simulation recordings go to `sim/`, real robot recordings to `real/`, both on the workstation. Existing recordings are preserved.
+
+The batch recorder `capture_session` and upstream `run_data_exporter` use the same defaults: pass `--sim` for simulation; omit it for real capture. The tmux launcher forwards its `--sim` flag. Explicit `--output-root`, `--root-output-dir` or single-episode `--output` paths retain their original meaning. Output source classification is independent of the later replay target.
+
 ## Running Data Collection
 
 There are two ways to run the data collection stack: an **all-in-one tmux launcher** (recommended) or **manual multi-terminal setup**.
@@ -337,7 +343,7 @@ python gear_sonic/scripts/pico_manager_thread_server.py --manager
 
 ```bash
 source .venv_data_collection/bin/activate
-python gear_sonic/scripts/run_data_exporter.py --task-prompt "pick up the cup"
+python gear_sonic/scripts/run_data_exporter.py --sim --task-prompt "pick up the cup"
 ```
 
 **Terminal 5 (optional) — Camera Viewer:**
@@ -354,7 +360,8 @@ All options are provided via CLI flags — no interactive prompts.  Key flags:
 | `--task-prompt` | `"demo"` | Language task description for this session |
 | `--dataset-name` | *(auto: timestamp)* | Dataset name.  Omit to create a new one, or pass an existing name to append episodes |
 | `--data-collection-frequency` | `50` | Recording frequency (Hz) |
-| `--root-output-dir` | `outputs` | Parent directory for saved datasets |
+| `--root-output-dir` | `outputs/datasets/sim` or `outputs/datasets/real` | Explicit parent overrides the default |
+| `--sim / --no-sim` | `False` | Recording source: simulation or real robot |
 
 ```{tip}
 Datasets are saved under `<root-output-dir>/<dataset-name>/`.  If `--dataset-name`
@@ -435,7 +442,7 @@ Key options:
 | `--sonic-zmq-port` | `5556` | SMPL pose publisher port |
 | `--state-zmq-host` | `localhost` | Robot state publisher host |
 | `--state-zmq-port` | `5557` | Robot state publisher port |
-| `--root-output-dir` | `outputs` | Root directory for saved datasets |
+| `--root-output-dir` | `outputs/datasets/sim` or `outputs/datasets/real` | Root directory for saved datasets |
 | `--text-to-speech / --no-text-to-speech` | `True` | Voice feedback via espeak |
 
 ---
@@ -445,7 +452,7 @@ Key options:
 Datasets are saved in the [LeRobot v2.1](https://github.com/huggingface/lerobot) format under `<root-output-dir>/<dataset-name>/`:
 
 ```text
-outputs/2026-04-03-14-30-00-G1-robot01/
+outputs/datasets/real/2026-04-03-14-30-00-G1-robot01/
 ├── data/
 │   ├── train-00000.parquet      # Tabular data (joint states, actions, annotations)
 │   └── ...
@@ -499,8 +506,8 @@ flagged episodes so they are excluded from fine-tuning:
 ```bash
 # Clean a single dataset (removes discarded episodes + stale SMPL frames)
 python gear_sonic/scripts/process_dataset.py \
-    --dataset-path outputs/my_dataset \
-    --output-path outputs/my_dataset_cleaned
+    --dataset-path outputs/datasets/real/my_dataset \
+    --output-path outputs/datasets/real/my_dataset_cleaned
 ```
 
 To keep discarded episodes (e.g., for inspection), pass `--no-remove-discarded`.
@@ -514,12 +521,12 @@ frozen (identical) lead-in frames that precede them:
 ```bash
 # Clean a single dataset in-place
 python gear_sonic/scripts/process_dataset.py \
-    --dataset-path outputs/my_dataset
+    --dataset-path outputs/datasets/real/my_dataset
 
 # Clean and write to a new directory (non-destructive)
 python gear_sonic/scripts/process_dataset.py \
-    --dataset-path outputs/my_dataset \
-    --output-path outputs/my_dataset_cleaned
+    --dataset-path outputs/datasets/real/my_dataset \
+    --output-path outputs/datasets/real/my_dataset_cleaned
 ```
 
 ```{warning}
@@ -529,8 +536,8 @@ positions/orientations instead of SMPL body parameters. In this case, you
 **must** disable SMPL cleaning to avoid dropping all frames:
 
     python gear_sonic/scripts/process_dataset.py \
-        --dataset-path outputs/my_dataset \
-        --output-path outputs/my_dataset_cleaned \
+        --dataset-path outputs/datasets/real/my_dataset \
+        --output-path outputs/datasets/real/my_dataset_cleaned \
         --no-remove-stale-smpl
 ```
 
@@ -543,13 +550,13 @@ configuration) before merging:
 ```bash
 # Merge by listing datasets on the command line
 python gear_sonic/scripts/process_dataset.py \
-    --dataset-path outputs/session1 outputs/session2 outputs/session3 \
-    --output-path outputs/merged_dataset
+    --dataset-path outputs/datasets/real/session1 outputs/datasets/real/session2 outputs/datasets/real/session3 \
+    --output-path outputs/datasets/real/merged_dataset
 
 # Or use a text file (one dataset path per line, # for comments)
 python gear_sonic/scripts/process_dataset.py \
     --dataset-list datasets.txt \
-    --output-path outputs/merged_dataset
+    --output-path outputs/datasets/real/merged_dataset
 ```
 
 SMPL cleaning is applied by default during merging.  When enabled, the script
@@ -564,3 +571,31 @@ the dropout.  To skip this cleaning and merge only, add `--no-remove-stale-smpl`
 ## Next Steps: Fine-tune and Deploy
 
 The output dataset is directly compatible with the [Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T) post-training pipeline. To fine-tune a VLA model on your collected data and deploy it for autonomous inference, see the [VLA Workflow tutorial](vla_workflow.md).
+
+## PICO with Inspire hands
+
+The [independent Inspire recorder](inspire_hands.md#independent-lerobot-recording)
+uses the shared LeRobot exporter and the 41-joint G1 + Inspire model. Start
+teleoperation separately; the recording process subscribes to measured state,
+submitted hand targets and camera images without owning robot control.
+
+## Registered end effectors in newbranch
+
+`gear_sonic.scripts.capture_session` selects the registered device and deployment
+with `--device`, `--deployment` and `--registry-dir`. The existing G1/Inspire stream
+recorder remains read-only. A deployment declaring `capture_source: local` instead
+owns an independent MuJoCo simulation for each episode; it supports a scripted
+sequence or PICO retargeting, exports LeRobot, and keeps the native trajectory in
+`raw/`. Standalone gripper recordings do not contain invented G1 body data.
+
+Both paths write `meta/end_effector.json` with device/channel definitions,
+deployment and external configuration snapshots, mapping version, task and
+`success / failure / unlabeled` outcome. `meta/preprocessing.json` records and
+validates the selected GR00T fields, slices and action semantics. It is a dataset
+contract, not model weights or fitted normalization statistics. Different device
+action spaces require appropriate model and training configuration.
+
+See the [device guide](../../../gear_sonic/utils/hand_control/README.md#轨迹与-gr00t)
+for commands, ownership rules and validation limits. These new paths have been
+tested locally with MuJoCo and synthetic tracking; no physical robot or headset
+validation is claimed.

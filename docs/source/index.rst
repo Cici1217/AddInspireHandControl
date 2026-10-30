@@ -95,6 +95,8 @@ Documentation
    tutorials/gamepad
    tutorials/zmq
    tutorials/inspire_hands
+   tutorials/vla_inspire
+   tutorials/console
    tutorials/manager
    tutorials/isaac_teleop_publisher_setup
    tutorials/vr_wholebody_teleop

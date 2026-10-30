@@ -1,0 +1,10 @@
+{
+  "schema": "end_effector.deployment.v1",
+  "device": "dex3",
+  "backend": "sim",
+  "mounts": [
+    "left",
+    "right"
+  ],
+  "options": {}
+}

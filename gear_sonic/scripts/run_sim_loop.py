@@ -4,16 +4,15 @@ Parses a YAML-based WBC config via tyro CLI, instantiates the G1 robot model,
 and launches the simulator (optionally with offscreen image publishing).
 """
 
+from pathlib import Path
 from typing import Dict
 
 import tyro
 
-from gear_sonic.data.robot_model.instantiation.g1 import (
-    instantiate_g1_robot_model,
-)
+from gear_sonic.utils.hand_control.registry import DEFAULT_REGISTRY, deployment_for_mode
 from gear_sonic.data.robot_model.robot_model import RobotModel
 from gear_sonic.utils.mujoco_sim.configs import SimLoopConfig
-from gear_sonic.utils.mujoco_sim.simulator_factory import SimulatorFactory, init_channel
+from gear_sonic.utils.mujoco_sim.simulator_factory import SimulatorFactory
 
 ArgsConfig = SimLoopConfig
 
@@ -23,13 +22,7 @@ class SimWrapper:
         self.robot_model = robot_model
         self.config = config
 
-        # BaseSimulator owns DDS initialization for Inspire, as in its direct
-        # launch path. Initializing here too creates the same domain twice.
-        # Keep the existing Dex3 launch path unchanged.
-        if self.config.get("HAND_TYPE", "dex3") != "inspire":
-            init_channel(config=self.config)
-
-        # Create simulator using factory
+        # BaseSimulator initializes DDS before constructing its SDK bridge.
         self.sim = SimulatorFactory.create_simulator(
             config=self.config,
             env_name=env_name,
@@ -47,41 +40,38 @@ def main(config: ArgsConfig):
             "enable_offscreen must be True when enable_image_publish is True"
         )
 
-    hand_options = {}
-    if config.hand == "inspire":
-        from gear_sonic.data.robot_model.instantiation.g1_inspire import (
-            instantiate_g1_rh56dfx_robot_model,
-        )
-        from gear_sonic.utils.hand_control.inspire.config import DEFAULT_MAPPING_PATH
-        from gear_sonic.utils.mujoco_sim.inspire.environment import configure_simulation
-        from gear_sonic.utils.mujoco_sim.inspire.gateway import InspireSimGateway
+    device = deployment_for_mode(config.hand, 'sim', config_path=config.effector_deployment,
+                                 registry_dir=config.device_registry or DEFAULT_REGISTRY,
+                                 options={'hand_config': str(config.hand_config)} if config.hand_config else None)
+    if 'body' not in device.registration.backends[device.backend]['capabilities']:
+        raise ValueError('device has no full-body simulation integration; use run_end_effector for standalone tools')
+    integration = device.body_integration()
+    wbc_config, hand_options = integration.simulation(wbc_config, config)
+    if config.scene:
+        wbc_config['ROBOT_SCENE'] = str(Path(config.scene).expanduser().resolve())
+    if config.initial_keyframe:
+        wbc_config["INITIAL_KEYFRAME"] = config.initial_keyframe
+    robot_model = device.robot_model()
 
-        hand_config = config.hand_config or DEFAULT_MAPPING_PATH
-        wbc_config = configure_simulation(wbc_config, hand_config)
-        robot_model = instantiate_g1_rh56dfx_robot_model(config_path=hand_config)
-        hand_options["hand_controller_factory"] = lambda model, data: InspireSimGateway(
-            model, data, hand_config
+    from gear_sonic.utils.hand_control.management import DeviceLease
+    with DeviceLease(device, 'full_body_simulation') as lease:
+        sim_wrapper = SimWrapper(
+            robot_model=robot_model,
+            env_name=config.env_name,
+            config=wbc_config,
+            onscreen=wbc_config.get("ENABLE_ONSCREEN", True),
+            offscreen=wbc_config.get("ENABLE_OFFSCREEN", False),
+            enable_image_publish=config.enable_image_publish,
+            **hand_options,
         )
-    else:
-        robot_model = instantiate_g1_robot_model()
-
-    sim_wrapper = SimWrapper(
-        robot_model=robot_model,
-        env_name=config.env_name,
-        config=wbc_config,
-        onscreen=wbc_config.get("ENABLE_ONSCREEN", True),
-        offscreen=wbc_config.get("ENABLE_OFFSCREEN", False),
-        enable_image_publish=config.enable_image_publish,
-        **hand_options,
-    )
-    # Start simulator as independent process
-    SimulatorFactory.start_simulator(
-        sim_wrapper.sim,
-        as_thread=False,
-        enable_image_publish=config.enable_image_publish,
-        mp_start_method=config.mp_start_method,
-        camera_port=config.camera_port,
-    )
+        lease.status('connected')
+        SimulatorFactory.start_simulator(
+            sim_wrapper.sim,
+            as_thread=False,
+            enable_image_publish=config.enable_image_publish,
+            mp_start_method=config.mp_start_method,
+            camera_port=config.camera_port,
+        )
 
 
 if __name__ == "__main__":

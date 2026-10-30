@@ -1,0 +1,155 @@
+diff --git a/gr00t/policy/gr00t_policy.py b/gr00t/policy/gr00t_policy.py
+index 0abb10e..5377a48 100644
+--- a/gr00t/policy/gr00t_policy.py
++++ b/gr00t/policy/gr00t_policy.py
+@@ -188,7 +188,12 @@ class Gr00tPolicy(BasePolicy):
+             unbatched_obs.append(unbatched_value)
+         return unbatched_obs
+ 
+-    def _to_vla_step_data(self, observation: dict[str, Any]) -> VLAStepData:
++    def _to_vla_step_data(
++        self,
++        observation: dict[str, Any],
++        *,
++        actions: dict[str, np.ndarray] | None = None,
++    ) -> VLAStepData:
+         """Convert a single observation into a VLAStepData object for processing.
+ 
+         Args:
+@@ -200,7 +205,11 @@ class Gr00tPolicy(BasePolicy):
+         return VLAStepData(
+             images=observation["video"],
+             states=observation["state"],
+-            actions={},  # No ground truth actions during inference
++            # Supplying the previous predicted action chunk enables the RTC
++            # inpainting primitive already implemented by the N1.7 action head.
++            # These are physical-unit actions; the processor applies the same
++            # action normalization used during training before collation.
++            actions={} if actions is None else actions,
+             text=observation["language"][self.language_key][0],
+             embodiment=self.embodiment_tag,
+         )
+@@ -382,7 +391,10 @@ class Gr00tPolicy(BasePolicy):
+ 
+         Args:
+             observation: Batched observation dictionary
+-            options: Optional parameters (currently unused)
++            options: Optional model parameters.  RTC accepts a batched physical-
++                unit action dict in ``rtc_previous_actions`` plus the action-head
++                ``action_horizon``, ``rtc_overlap_steps``, ``rtc_frozen_steps``
++                and ``rtc_ramp_rate`` parameters.
+ 
+         Returns:
+             Tuple of (actions_dict, info_dict)
+@@ -391,10 +403,46 @@ class Gr00tPolicy(BasePolicy):
+         unbatched_observations = self._unbatch_observation(observation)
+         processed_inputs = []
+ 
++        rtc_actions_by_sample: list[dict[str, np.ndarray] | None] = [
++            None
++        ] * len(unbatched_observations)
++        model_options = None if options is None else dict(options)
++        if model_options is not None and "rtc_previous_actions" in model_options:
++            raw_rtc_actions = model_options.pop("rtc_previous_actions")
++            if not isinstance(raw_rtc_actions, dict):
++                raise TypeError("rtc_previous_actions must be a dictionary")
++            expected_keys = self.modality_configs["action"].modality_keys
++            if set(raw_rtc_actions) != set(expected_keys):
++                raise ValueError(
++                    "rtc_previous_actions keys must exactly match the action modality: "
++                    f"expected={expected_keys}, got={sorted(raw_rtc_actions)}"
++                )
++            batch_size = len(unbatched_observations)
++            batched_actions: dict[str, np.ndarray] = {}
++            for key in expected_keys:
++                value = np.asarray(raw_rtc_actions[key], dtype=np.float32)
++                if value.ndim != 3 or value.shape[0] != batch_size:
++                    raise ValueError(
++                        f"rtc_previous_actions[{key!r}] must have shape [B, T, D] "
++                        f"with B={batch_size}, got {value.shape}"
++                    )
++                if not np.all(np.isfinite(value)):
++                    raise ValueError(
++                        f"rtc_previous_actions[{key!r}] contains NaN or infinity"
++                    )
++                batched_actions[key] = value
++            rtc_actions_by_sample = [
++                {key: value[index] for key, value in batched_actions.items()}
++                for index in range(batch_size)
++            ]
++
+         # Step 2: Process each observation through the VLA processor
+         states = []
+-        for obs in unbatched_observations:
+-            vla_step_data = self._to_vla_step_data(obs)
++        for index, obs in enumerate(unbatched_observations):
++            vla_step_data = self._to_vla_step_data(
++                obs,
++                actions=rtc_actions_by_sample[index],
++            )
+             states.append(vla_step_data.states)  # dict[str, np.ndarray[np.float32, (T, D)]]
+             messages = [{"type": MessageType.EPISODE_STEP.value, "content": vla_step_data}]
+             processed_inputs.append(self.processor(messages))
+@@ -405,7 +453,10 @@ class Gr00tPolicy(BasePolicy):
+ 
+         # Step 4: Run model inference to predict actions
+         with torch.inference_mode():
+-            model_pred = self.model.get_action(**collated_inputs)
++            model_pred = self.model.get_action(
++                **collated_inputs,
++                options=model_options,
++            )
+         normalized_action = model_pred["action_pred"].float()
+ 
+         # Step 5: Decode actions from normalized space back to physical units
+@@ -420,7 +471,9 @@ class Gr00tPolicy(BasePolicy):
+         casted_action = {
+             key: value.astype(np.float32) for key, value in unnormalized_action.items()
+         }
+-        return casted_action, {}
++        return casted_action, {
++            "rtc_applied": any(action is not None for action in rtc_actions_by_sample)
++        }
+ 
+     def check_action(self, action: dict[str, Any]) -> None:
+         """Validate that the action has the correct structure and types.
+diff --git a/tests/gr00t/policy/test_gr00t_policy.py b/tests/gr00t/policy/test_gr00t_policy.py
+index 1992f47..d6218f4 100644
+--- a/tests/gr00t/policy/test_gr00t_policy.py
++++ b/tests/gr00t/policy/test_gr00t_policy.py
+@@ -168,3 +168,35 @@ class TestGr00tPolicyGetAction:
+         action, info = policy.get_action(obs)
+         assert isinstance(action, dict)
+         assert isinstance(info, dict)
++
++    def test_rtc_previous_actions_are_processed_and_forwarded_to_model(self, policy):
++        obs = _make_observation()
++        previous = {
++            key: np.full((1, 16, 1), index, dtype=np.float32)
++            for index, key in enumerate(ACTION_KEYS)
++        }
++        options = {
++            "rtc_previous_actions": previous,
++            "action_horizon": 16,
++            "rtc_overlap_steps": 8,
++            "rtc_frozen_steps": 2,
++            "rtc_ramp_rate": 1.0,
++        }
++        captured = []
++
++        def capture_processor(messages):
++            captured.append(messages[0]["content"])
++            return {}
++
++        policy.processor.side_effect = capture_processor
++        policy.collate_fn.side_effect = lambda _items: BatchFeature(data={"inputs": {}})
++
++        _action, info = policy.get_action(obs, options=options)
++
++        assert info["rtc_applied"] is True
++        assert len(captured) == 1
++        for key in ACTION_KEYS:
++            np.testing.assert_array_equal(captured[0].actions[key], previous[key][0])
++        forwarded = policy.model.get_action.call_args.kwargs["options"]
++        assert "rtc_previous_actions" not in forwarded
++        assert forwarded["rtc_overlap_steps"] == 8

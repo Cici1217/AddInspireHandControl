@@ -376,7 +376,7 @@ class ComposedCameraSensor(Sensor, SensorServer):
             from gear_sonic.camera.drivers.realsense import RealSenseSensor
 
             print(f"Initializing RealSense sensor for camera type: {camera_type}")
-            return RealSenseSensor(mount_position=mount_position)
+            return RealSenseSensor(mount_position=mount_position, device_id=device_id)
 
         elif camera_type.endswith(".mp4"):
             from gear_sonic.camera.drivers.dummy import ReplayDummySensor
@@ -451,10 +451,14 @@ class ComposedCameraSensor(Sensor, SensorServer):
         """Merge per-camera data into a single ImageMessageSchema."""
         all_timestamps = {}
         all_images = {}
+        all_metadata = {}
         for _mount, camera_data in message.items():
             all_timestamps.update(camera_data.get("timestamps", {}))
             all_images.update(camera_data.get("images", {}))
-        img_schema = ImageMessageSchema(timestamps=all_timestamps, images=all_images)
+            all_metadata.update(camera_data.get("metadata", {}))
+        img_schema = ImageMessageSchema(
+            timestamps=all_timestamps, images=all_images, metadata=all_metadata
+        )
         return img_schema.serialize()
 
     def run_server(self):
@@ -500,7 +504,8 @@ class ComposedCameraSensor(Sensor, SensorServer):
 class ComposedCameraClientSensor(Sensor, SensorClient):
     """ZMQ client that deserializes merged camera frames from the server."""
 
-    def __init__(self, server_ip: str = "localhost", port: int = 5555):
+    def __init__(self, server_ip: str = "localhost", port: int = 5555, *, include_depth: bool = True):
+        self.include_depth = include_depth
         self.start_client(server_ip, port)
 
         self._latest_message = None
@@ -528,7 +533,9 @@ class ComposedCameraClientSensor(Sensor, SensorClient):
 
         if message is not None:
             self.idx += 1
-            self._latest_message = ImageMessageSchema.deserialize(message).asdict()
+            self._latest_message = ImageMessageSchema.deserialize(
+                message, include_depth=self.include_depth
+            ).asdict()
             self._last_new_message_time = current_time
 
             if self.idx % 10 == 0:

@@ -525,7 +525,6 @@ class ZMQManager : public InputInterface {
 
       // Handle start control
       if (start_control_ && !operator_state.start) {
-        operator_state.start = true;
         {
           std::lock_guard<std::mutex> lock(current_motion_mutex);
           operator_state.play = false;
@@ -534,6 +533,11 @@ class ZMQManager : public InputInterface {
 
         // Ensure planner is enabled
         if (!planner_state.enabled) {
+          // The input thread waits below while the planner runs. Seed a valid
+          // stationary request before enabling it; the default MovementState
+          // has height=0 and must not become a transient replan target.
+          movement_state_buffer.SetData(MovementState(static_cast<int>(LocomotionMode::IDLE),
+                                                      {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, -1.0, -1.0));
           planner_state.enabled = true;
           std::cout << "[ZMQManager] Planner enabled" << std::endl;
         }
@@ -571,6 +575,9 @@ class ZMQManager : public InputInterface {
         {
           std::lock_guard<std::mutex> lock(current_motion_mutex);
           operator_state.play = true;
+          // WAIT_FOR_CONTROL installs the first planner reference without
+          // running the policy. Start only after that handoff succeeds.
+          operator_state.start = true;
         }
       }
 

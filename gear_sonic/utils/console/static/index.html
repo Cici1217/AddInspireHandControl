@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>G1 · SONIC 控制台</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="session-notice" class="session-notice" role="alert" hidden><span>网页服务已重启，请刷新页面后继续操作。</span><button id="reload-session">刷新页面</button></div>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="G1 控制台首页"><b>G1</b><span>SONIC<small>控制台</small></span></a>
+    <nav id="navigation" aria-label="功能选择"></nav>
+    <button id="common-nav" class="common-nav">公共配置</button>
+    <button id="open-terminal" class="common-nav">运行终端</button>
+    <label class="language-picker"><span>界面语言</span><select id="language-select" aria-label="界面语言"><option value="zh-CN">中文</option><option value="ja">日本語</option></select></label>
+    <div class="sidebar-bottom"><span class="dot"></span> 本地运行</div>
+  </aside>
+  <main>
+    <header><div class="breadcrumb">G1 <span>/</span> <b id="crumb">身体控制</b></div><span id="connection" class="pill" title="这里显示浏览器与本机网页服务的连接状态。机器人和 PICO 的状态请查看各自终端。">正在连接网页服务</span></header>
+    <section class="page-title"><div><h1 id="title">身体控制</h1><p id="description"></p></div><div id="mode" class="segmented" aria-label="运行模式"></div></section>
+    <div id="message" role="status" aria-live="polite"></div>
+    <section id="common-view" hidden aria-label="公共配置页面">
+      <div class="common-intro"><p id="config-status" role="status">修改后自动保存</p><button id="return-feature">返回</button></div>
+      <div id="common-start"></div>
+      <details id="common-installation" class="panel config-panel" hidden>
+        <summary>安装与检查</summary>
+        <div id="common-installation-content"></div>
+      </details>
+      <div id="common-groups"></div>
+    </section>
+    <div id="function-home">
+    <section id="function-view">
+      <div class="workspace">
+        <details id="network-help" class="panel config-panel" hidden><summary>查询 IP（可选）</summary><div id="network-help-content" class="recording-location-content"></div></details>
+        <section id="recording-location" class="panel" aria-label="录制与回放位置" hidden></section>
+        <details id="task-config" class="panel config-panel" open><summary>本次配置</summary><div id="settings"></div><p class="hint" id="function-note"></p></details>
+        <section class="panel command-panel"><div class="panel-heading"><h2>执行步骤</h2><span id="step-count"></span></div>
+
+          <div id="steps"></div>
+        </section>
+      </div>
+    </section>
+    </div>
+    <details class="checkout-details"><summary>项目位置</summary><p id="checkout"></p></details>
+  </main>
+  <div id="terminal-resize" role="separator" aria-label="调整终端宽度" aria-orientation="vertical" tabindex="0" title="拖动调整终端宽度；双击恢复默认"></div>
+  <section id="runtime" class="runtime collapsed" aria-label="运行终端">
+    <div class="runtime-heading">
+      <button id="terminal-toggle" aria-expanded="false" aria-controls="terminal-content">运行终端 <span id="runtime-count">未启动</span><span id="terminal-toggle-label">显示</span></button>
+      <div class="runtime-actions"><button id="terminal-expand" aria-label="全屏终端">全屏</button><button id="stop-all" class="danger" title="按顺序停止本控制台启动的进程">停止全部</button></div>
+    </div>
+    <div id="terminal-content" hidden>
+      <div class="terminal-toolbar"><div id="job-tabs" role="tablist" aria-label="进程终端"></div></div>
+      <div id="jobs"><p class="empty">执行一个步骤，终端会自动出现在这里。</p></div>
+      <div class="terminal-bottom"><span id="terminal-notice" role="status" aria-live="polite"></span><button id="log-bottom">最新日志</button><button id="refresh-output">输出文件</button></div>
+      <div id="outputs" hidden></div>
+    </div>
+  </section>
+  <script src="/ja.js" defer></script><script src="/i18n.js" defer></script><script src="/settings.js" defer></script><script src="/app.js" defer></script>
+</body>
+</html>

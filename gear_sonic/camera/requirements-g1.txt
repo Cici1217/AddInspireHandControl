@@ -1,0 +1,9 @@
+# G1 Ubuntu 22.04 / Python 3.10 ARM64; create the venv with --system-site-packages
+# to reuse the robot's installed NumPy and OpenCV without changing them.
+numpy<2
+pyzmq==26.4.0
+msgpack==1.1.1
+msgpack-numpy==0.4.8
+tyro==1.0.16
+# Official CPython 3.10 ARM64 wheel: https://pypi.org/project/pyrealsense2/2.56.5.9235/
+pyrealsense2==2.56.5.9235

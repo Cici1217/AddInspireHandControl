@@ -55,6 +55,7 @@ class SimulatorFactory:
             env_name=env_name,
             redis_client=kwargs.get("redis_client", None),
             hand_controller_factory=kwargs.get("hand_controller_factory"),
+            env_factory=kwargs.get("env_factory"),
         )
 
     @staticmethod

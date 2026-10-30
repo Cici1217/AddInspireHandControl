@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 import yaml
 
-from gear_sonic.utils.hand_control.inspire.client import InspireRealBackend
-from gear_sonic.utils.hand_control.inspire.config import DEFAULT_MAPPING_PATH, driver_command
+from gear_sonic.devices.inspire.driver.client import InspireRealBackend
+from gear_sonic.devices.inspire.config import DEFAULT_MAPPING_PATH, driver_command
 
 
 class SerialEmulator:

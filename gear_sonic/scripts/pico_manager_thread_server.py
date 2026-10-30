@@ -1235,6 +1235,16 @@ class ThreePointPose:
         print(f"[{self.log_prefix}] Wrist recalibration pending (neck preserved, measured q)")
 
 
+def _decompose_optical_elbow(rotation_aa, axis):
+    """The optical route accepts identity elbows without a zero-angle division."""
+    nonzero = np.linalg.norm(rotation_aa, axis=1) > 0
+    twist = np.tile([1.0, 0.0, 0.0, 0.0], (len(rotation_aa), 1))
+    swing = twist.copy()
+    if np.any(nonzero):
+        twist[nonzero], swing[nonzero] = decompose_rotation_aa(rotation_aa[nonzero], axis)
+    return twist, swing
+
+
 class PoseStreamer:
     """Encapsulates the pose streaming loop state and logic."""
 
@@ -1249,7 +1259,9 @@ class PoseStreamer:
         record_dir: str,
         record_format: str,
         log_prefix: str = "PoseLoop",
+        pose_adapter=None,
     ):
+        self.pose_adapter = pose_adapter
         self.socket = socket
         self.reader = reader
         self.num_frames_to_send = num_frames_to_send
@@ -1269,7 +1281,9 @@ class PoseStreamer:
             os.makedirs(record_dir, exist_ok=True)
         self.record_idx = 0
 
-        self.left_hand_ik_solver, self.right_hand_ik_solver = init_hand_ik_solvers()
+        self.left_hand_ik_solver, self.right_hand_ik_solver = (
+            init_hand_ik_solvers() if pose_adapter is None else (None, None)
+        )
         self.parent_indices = [
             -1,
             0,
@@ -1348,32 +1362,37 @@ class PoseStreamer:
         latest_data = compute_from_body_poses(
             self.parent_indices, self.device, sample["body_poses_np"]
         )
-        left_menu_button, left_trigger, right_trigger, left_grip, right_grip = get_controller_inputs(
-            self.reader
-        )
-        # Get A and B button states for data collection control
-        a_pressed, b_pressed, x_pressed, y_pressed = get_abxy_buttons(self.reader)
+        if self.pose_adapter is None:
+            left_menu_button, left_trigger, right_trigger, left_grip, right_grip = get_controller_inputs(
+                self.reader
+            )
+            # Get A and B button states for data collection control
+            a_pressed, b_pressed, x_pressed, y_pressed = get_abxy_buttons(self.reader)
 
-        # Data collection toggle logic (edge-triggered)
-        # Left grip + A = toggle_data_collection
-        # Left grip + B = toggle_data_abort
-        toggle_data_collection_tmp = a_pressed and left_grip > 0.5
-        toggle_data_abort_tmp = b_pressed and left_grip > 0.5
+            # Data collection toggle logic (edge-triggered)
+            # Left grip + A = toggle_data_collection
+            # Left grip + B = toggle_data_abort
+            toggle_data_collection_tmp = a_pressed and left_grip > 0.5
+            toggle_data_abort_tmp = b_pressed and left_grip > 0.5
 
-        # Detect rising edge
-        toggle_data_collection = toggle_data_collection_tmp and not self.toggle_data_collection_last
-        toggle_data_abort = toggle_data_abort_tmp and not self.toggle_data_abort_last
-        self.toggle_data_collection_last = toggle_data_collection_tmp
-        self.toggle_data_abort_last = toggle_data_abort_tmp
+            # Detect rising edge
+            toggle_data_collection = toggle_data_collection_tmp and not self.toggle_data_collection_last
+            toggle_data_abort = toggle_data_abort_tmp and not self.toggle_data_abort_last
+            self.toggle_data_collection_last = toggle_data_collection_tmp
+            self.toggle_data_abort_last = toggle_data_abort_tmp
 
-        left_hand_joints, right_hand_joints = compute_hand_joints_from_inputs(
-            self.left_hand_ik_solver,
-            self.right_hand_ik_solver,
-            left_trigger,
-            left_grip,
-            right_trigger,
-            right_grip,
-        )
+            left_hand_joints, right_hand_joints = compute_hand_joints_from_inputs(
+                self.left_hand_ik_solver,
+                self.right_hand_ik_solver,
+                left_trigger,
+                left_grip,
+                right_trigger,
+                right_grip,
+            )
+        else:
+            left_trigger = right_trigger = left_grip = right_grip = 0.0
+            toggle_data_collection = toggle_data_abort = False
+            left_hand_joints = right_hand_joints = np.zeros((1, 7), dtype=np.float32)
         smpl_pose_np = (
             latest_data["smpl_pose"].detach().cpu().numpy()[:, :63].reshape(-1, 21, 3)[0]
         ).astype(np.float32)
@@ -1438,13 +1457,14 @@ class PoseStreamer:
         smpl_r_elbow_aa = body_pose[:, SMPL_R_ELBOW_IDX]
         smpl_r_wrist_aa = body_pose[:, SMPL_R_WRIST_IDX]
 
+        decompose_elbow = decompose_rotation_aa if self.pose_adapter is None else _decompose_optical_elbow
         g1_l_elbow_axis = np.array([0, 1, 0])
-        g1_l_elbow_q_twist, g1_l_elbow_q_swing = decompose_rotation_aa(
+        g1_l_elbow_q_twist, g1_l_elbow_q_swing = decompose_elbow(
             smpl_l_elbow_aa, g1_l_elbow_axis
         )
 
         g1_r_elbow_axis = np.array([0, 1, 0])
-        g1_r_elbow_q_twist, g1_r_elbow_q_swing = decompose_rotation_aa(
+        g1_r_elbow_q_twist, g1_r_elbow_q_swing = decompose_elbow(
             smpl_r_elbow_aa, g1_r_elbow_axis
         )
 
@@ -1503,7 +1523,7 @@ class PoseStreamer:
             self.buffer_cleared = False
 
         # Get joystick axes for yaw accumulation
-        _, _, rx, _ = get_controller_axes(self.reader)
+        rx = get_controller_axes(self.reader)[2] if self.pose_adapter is None else 0.0
         self.yaw_accumulator.update(rx, self.frame_time)
 
         # Only send if buffer is full and we're not waiting for fresh data
@@ -1538,8 +1558,11 @@ class PoseStreamer:
                 ),
             }
 
+            mirror = self.pose_adapter(sample, numpy_data) if self.pose_adapter is not None else None
             packed_message = pack_pose_message(numpy_data, topic="pose")
             self.socket.send(packed_message)
+            if mirror is not None:
+                self.socket.send(mirror)
 
             if self.record_dir:
                 out_path = os.path.join(self.record_dir, f"pose_{self.record_idx:06d}.npz")

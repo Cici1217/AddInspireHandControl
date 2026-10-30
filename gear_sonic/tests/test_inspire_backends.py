@@ -6,10 +6,10 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from gear_sonic.utils.hand_control.inspire.client import InspireRealBackend
-from gear_sonic.utils.hand_control.inspire.contract import ContractError, HandStatus
-from gear_sonic.utils.hand_control.inspire.session import OperatorSession, OperatorSessionError
-from gear_sonic.utils.mujoco_sim.inspire.backend import InspireSimBackend
+from gear_sonic.devices.inspire.driver.client import FeedbackUnavailable, InspireRealBackend
+from gear_sonic.devices.inspire.contract import ContractError, HandStatus
+from gear_sonic.devices.inspire.driver.session import OperatorSession, OperatorSessionError
+from gear_sonic.devices.inspire.simulation.backend import InspireSimBackend
 
 
 def test_sim_moves_reads_feedback_and_preserves_body_controls():
@@ -120,7 +120,7 @@ def test_real_connect_failure_releases_socket_owner(monkeypatch):
         raise RuntimeError("gateway is not ready")
 
     monkeypatch.setattr(
-        "gear_sonic.utils.hand_control.inspire.session.OperatorSession",
+        "gear_sonic.devices.inspire.driver.session.OperatorSession",
         lambda args: SimpleNamespace(ready=fail, close=lambda: closed.append(True)),
     )
     hand = InspireRealBackend()
@@ -137,8 +137,88 @@ class ScriptedIO:
         return {"hand": self.rows.pop(0)} if self.rows else {}
 
 
+@pytest.fixture
+def running_hand(monkeypatch):
+    hand = InspireRealBackend(pause_on_stale=True)
+    io = ScriptedIO([])
+    sent, stopped = [], []
+    io.send = lambda side, payload: sent.append(payload)
+    session = OperatorSession(SimpleNamespace(stop_timeout=0.1, state_timeout=0.3), io=io)
+    session.eid = "a" * 32
+    session.attempted.add("hand")
+    row = state(1)
+    row["operator_session"].update(session_id=session.eid, active=True)
+    row["status"] = "ARMED"
+    io.rows.append(row)
+    session._poll()
+    monkeypatch.setattr(session, "finish", lambda: stopped.append(True))
+    hand._session = session
+    hand._prepared = True
+    hand._guard.arm()
+    hand.set_target([0] * 6, [0] * 6)
+    # Freeze feedback receipt, not the command/source clock.
+    session.rows["hand"] = row, time.monotonic() - 0.4
+    return hand, io, row, sent, stopped
+
+
+def test_pico_feedback_gap_skips_commands_and_resumes_same_session(running_hand):
+    hand, io, row, sent, stopped = running_hand
+    received = hand._session.rows["hand"][1]
+    for _ in range(3):
+        io.rows.append(row.copy())  # Replayed packets must not clear the pause.
+        with pytest.raises(FeedbackUnavailable, match="stale measured feedback"):
+            hand.set_target([0] * 6, [0] * 6)
+        assert hand._session.rows["hand"][1] == received
+    assert len(sent) == 1 and not stopped and not hand._stopped
+    io.rows.append({**row, "sequence": 2})
+    hand.set_target([0] * 6, [0] * 6)
+    assert len(sent) == 2 and not stopped
+    assert [command["sequence"] for command in sent] == [1, 2]
+    assert sent[0]["operator_session_id"] == sent[1]["operator_session_id"]
+
+
+@pytest.mark.parametrize(
+    "case", ["fault", "stale", "latched", "owner", "disarmed", "restart", "regression"]
+)
+def test_feedback_resume_still_rejects_gateway_failure(running_hand, case):
+    hand, io, row, sent, stopped = running_hand
+    with pytest.raises(FeedbackUnavailable):
+        hand.set_target([0] * 6, [0] * 6)
+    changed = {**row, "sequence": 2, "operator_session": dict(row["operator_session"])}
+    if case in ("fault", "stale", "disarmed"):
+        changed["status"] = case.upper()
+    elif case == "latched":
+        changed["operator_session"]["fault_latched"] = True
+    elif case == "owner":
+        changed["operator_session"]["session_id"] = "b" * 32
+    elif case == "restart":
+        changed["operator_session"]["instance_id"] = "b"
+    else:
+        changed["sequence"] = 0
+    io.rows.append(changed)
+    with pytest.raises(RuntimeError) as error:
+        hand.set_target([0] * 6, [0] * 6)
+    assert not isinstance(error.value, FeedbackUnavailable)
+    assert stopped == [True] and hand._stopped and len(sent) == 1
+
+
+@pytest.mark.parametrize("case", ["ordinary_client", "startup", "known_fault"])
+def test_feedback_pause_requires_opt_in_and_an_established_session(running_hand, case):
+    hand, io, row, sent, stopped = running_hand
+    if case == "ordinary_client":
+        hand._pause_on_stale = False
+    elif case == "startup":
+        hand._prepared = False
+    else:
+        hand._session.faulted = True
+    with pytest.raises(RuntimeError, match="stale measured feedback") as error:
+        hand.set_target([0] * 6, [0] * 6)
+    assert not isinstance(error.value, FeedbackUnavailable)
+    assert hand._stopped and stopped == [True] and len(sent) == 1
+
+
 def state(sequence=1, instance="a", **meta):
-    from gear_sonic.utils.hand_control.inspire.contract import InspireHandState
+    from gear_sonic.devices.inspire.contract import InspireHandState
 
     row = InspireHandState(
         sequence, 0, 0, HandStatus.DISARMED, np.zeros(6), np.zeros(6)
@@ -281,17 +361,16 @@ def test_sequence_cli_closes_on_error(monkeypatch):
     from types import SimpleNamespace
 
     from gear_sonic.scripts import inspire_hand_example as example
-    from gear_sonic.utils.hand_control.interface import HandState
-    from gear_sonic.utils.mujoco_sim.inspire import backend as sim
+    from gear_sonic.utils.hand_control.interface import EffectorState
 
     closed = []
     hand = SimpleNamespace(
         connect=lambda: None,
-        description="test",
-        read_state=lambda: HandState((0.0,) * 6, (0.0,) * 6, 1),
+        description=SimpleNamespace(command_hz=50),
+        get_state=lambda: EffectorState({'left': (0.0,)*6, 'right': (0.0,)*6}, 1, {'left':True, 'right':True}),
         close=lambda: closed.append(True),
     )
-    monkeypatch.setattr(sim, "create_backend", lambda: hand)
+    monkeypatch.setattr(example, "deployment", lambda *args, **kwargs: SimpleNamespace(create=lambda: hand))
 
     def fail(*args, **kwargs):
         raise RuntimeError("sequence failure")

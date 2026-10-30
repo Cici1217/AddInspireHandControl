@@ -33,6 +33,7 @@ license = {text = "Apache-2.0"}
 # pico_manager_thread_server.py + visualization (pyzmq, pyvista, pinocchio FK)
 # Usage: pip install -e "gear_sonic[teleop]"
 teleop = [
+    "pyyaml",
     "pyzmq",
     "msgpack",
     "msgpack-numpy",
@@ -112,7 +113,7 @@ include = ["gear_sonic*"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-gear_sonic = ["py.typed", "**/*.json", "**/*.yaml"]
+gear_sonic = ["py.typed", "**/*.json", "**/*.yaml", "data/end_effectors/*.xml", "utils/console/static/*.html", "utils/console/static/*.css", "utils/console/static/*.js"]
 
 [tool.setuptools.dynamic]
 version = {attr = "gear_sonic.version.VERSION"}

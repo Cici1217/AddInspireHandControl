@@ -410,6 +410,8 @@ def main(config: DataCollectionLaunchConfig):
     )
     if config.dataset_name:
         exporter_cmd += f" --dataset-name '{config.dataset_name}'"
+    if config.sim:
+        exporter_cmd += " --sim"
     if config.record_wrist_cameras:
         exporter_cmd += " --record-wrist-cameras"
     if not config.text_to_speech:

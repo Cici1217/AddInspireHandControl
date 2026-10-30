@@ -1,0 +1,12 @@
+{
+  "schema": "end_effector.deployment.v1",
+  "device": "inspire",
+  "backend": "sim",
+  "mounts": [
+    "left",
+    "right"
+  ],
+  "options": {
+    "hand_config": "gear_sonic/data/robots/g1/inspire/hand_config.yaml"
+  }
+}

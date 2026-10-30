@@ -1,0 +1,320 @@
+<mujoco model="G1 Inspire measured basket on office chair">
+
+  <include file="../../../gear_sonic/devices/inspire/assets/g1_29dof_rh56dfx.xml" />
+  <compiler meshdir="../../../gear_sonic/devices/inspire/assets/meshes" /><option timestep="0.001" integrator="implicitfast" cone="elliptic" impratio="5" />
+  <visual>
+    <global offwidth="1280" offheight="960" azimuth="135" elevation="-25" />
+    <quality shadowsize="4096" offsamples="4" />
+    <headlight diffuse=".45 .45 .45" ambient=".35 .35 .35" specular=".1 .1 .1" />
+  </visual>
+  <default>
+    <default class="photo_support">
+      <geom contype="1" conaffinity="3" friction=".8 .01 .001" solref=".008 1" solimp=".95 .99 .001" />
+    </default>
+    <default class="photo_object">
+      <geom contype="1" conaffinity="3" friction=".8 .01 .001" solref=".008 1" solimp=".95 .99 .001" />
+    </default>
+  </default>
+  <statistic center=".4 0 .65" extent="1.5" />
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".20 .21 .23" rgb2=".10 .11 .13" width="512" height="3072" />
+    <texture name="photo_fabric_texture" type="2d" file="assets/fabric.png" />
+    <material name="photo_fabric" texture="photo_fabric_texture" texrepeat="2 4" specular="0" shininess="0" />
+    <texture name="photo_carpet_texture" type="2d" file="assets/carpet.png" />
+    <material name="photo_carpet" texture="photo_carpet_texture" texrepeat="12 12" specular="0" shininess="0" />
+    <material name="photo_rubber" rgba=".035 .038 .035 1" />
+    <material name="photo_metal" rgba=".47 .49 .50 1" />
+    <material name="photo_dark_metal" rgba=".14 .15 .14 1" />
+    <material name="photo_screen_frame" rgba=".64 .61 .49 1" />
+    <texture name="chair_red_texture" type="2d" file="assets/chair_red.png" />
+    <material name="chair_red" texture="chair_red_texture" specular="0.08" shininess="0.08" />
+    <texture name="basket_wood_texture" type="2d" file="assets/basket_wood.png" />
+    <material name="basket_wood" texture="basket_wood_texture" specular="0.08" shininess="0.08" />
+    <material name="chair_grey" rgba=".33 .35 .37 1" specular="0.25" shininess="0.3" />
+    <material name="basket_white" rgba=".91 .92 .88 1" specular="0.3" shininess="0.3" />
+    <mesh name="chair_seat_mesh" file="../../../../../scenes/inspire/basket_chair/assets/chair_seat_mesh.obj" />
+    <mesh name="chair_back_mesh" file="../../../../../scenes/inspire/basket_chair/assets/chair_back_mesh.obj" />
+    <mesh name="basket_wire" file="../../../../../scenes/inspire/basket_chair/assets/basket_wire.obj" />
+    <mesh name="basket_wall_00" vertex="0.09480913 0.1444456 0.002598707 0.09448903 0.1485129 0.002598707 0.1164644 0.1688258 0.1675987 0.1168091 0.1644456 0.1675987 0.09619087 0.1445544 0.002401293 0.09587077 0.1486217 0.002401293 0.1178461 0.1689345 0.1674013 0.1181909 0.1645544 0.1674013" />
+    <mesh name="basket_wall_01" vertex="0.0945076 0.1484059 0.002609409 0.09355518 0.152373 0.002609409 0.1154573 0.1729911 0.1676094 0.116483 0.1687188 0.1676094 0.09585219 0.1487287 0.002390591 0.09489976 0.1526958 0.002390591 0.1168019 0.1733139 0.1673906 0.1178276 0.1690416 0.1673906" />
+    <mesh name="basket_wall_02" vertex="0.09358995 0.1522704 0.002617622 0.09202865 0.1560397 0.002617622 0.1138107 0.1769477 0.1676176 0.1154921 0.1728884 0.1676176 0.09486499 0.1527985 0.002382378 0.09330369 0.1565678 0.002382378 0.1150857 0.1774758 0.1673824 0.1167671 0.1734165 0.1673824" />
+    <mesh name="basket_wall_03" vertex="0.09207864 0.1559437 0.002623184 0.08994691 0.1594224 0.002623184 0.1115649 0.1805979 0.1676232 0.1138606 0.1768517 0.1676232 0.0932537 0.1566638 0.002376816 0.09112198 0.1601425 0.002376816 0.11274 0.181318 0.1673768 0.1150357 0.1775718 0.1673768" />
+    <mesh name="basket_wall_04" vertex="0.09001085 0.1593352 0.002625991 0.08736118 0.1624376 0.002625991 0.1087754 0.1838518 0.167626 0.1116289 0.1805108 0.167626 0.09105803 0.1602296 0.002374009 0.08840837 0.163332 0.002374009 0.1098226 0.1847462 0.167374 0.1126761 0.1814052 0.167374" />
+    <mesh name="basket_wall_05" vertex="0.08743759 0.1623612 0.002625991 0.08433523 0.1650109 0.002625991 0.1055108 0.1866289 0.167626 0.1088518 0.1837754 0.167626 0.08833197 0.1634084 0.002374009 0.08522961 0.166058 0.002374009 0.1064052 0.1876761 0.167374 0.1097462 0.1848226 0.167374" />
+    <mesh name="basket_wall_06" vertex="0.08442238 0.1649469 0.002623184 0.08094371 0.1670786 0.002623184 0.1018517 0.1888606 0.1676232 0.1055979 0.1865649 0.1676232 0.08514246 0.166122 0.002376816 0.08166379 0.1682537 0.002376816 0.1025718 0.1900357 0.1673768 0.106318 0.18774 0.1673768" />
+    <mesh name="basket_wall_07" vertex="0.08103968 0.1670286 0.002617622 0.07727037 0.1685899 0.002617622 0.09788841 0.1904921 0.1676176 0.1019477 0.1888107 0.1676176 0.08156782 0.1683037 0.002382378 0.07779851 0.169865 0.002382378 0.09841655 0.1917671 0.1673824 0.1024758 0.1900857 0.1673824" />
+    <mesh name="basket_wall_08" vertex="0.07737304 0.1685552 0.002609409 0.07340589 0.1695076 0.002609409 0.09371876 0.191483 0.1676094 0.09799107 0.1904573 0.1676094 0.07769585 0.1698998 0.002390591 0.0737287 0.1708522 0.002390591 0.09404157 0.1928276 0.1673906 0.09831388 0.1918019 0.1673906" />
+    <mesh name="basket_wall_09" vertex="0.07356574 0.1694861 0.0025926 -0.06950155 0.1698062 0.0025926 -0.08950155 0.1918062 0.1675926 0.09387861 0.1914614 0.1675926 0.07356885 0.1708737 0.0024074 -0.06949845 0.1711938 0.0024074 -0.08949845 0.1931938 0.1674074 0.09388172 0.1928491 0.1674074" />
+    <mesh name="basket_wall_10" vertex="-0.06944563 0.1698091 0.002598707 -0.07351292 0.169489 0.002598707 -0.09382579 0.1914644 0.1675987 -0.08944563 0.1918091 0.1675987 -0.06955437 0.1711909 0.002401293 -0.07362167 0.1708708 0.002401293 -0.09393454 0.1928461 0.1674013 -0.08955437 0.1931909 0.1674013" />
+    <mesh name="basket_wall_11" vertex="-0.07340589 0.1695076 0.002609409 -0.07737304 0.1685552 0.002609409 -0.09799107 0.1904573 0.1676094 -0.09371876 0.191483 0.1676094 -0.0737287 0.1708522 0.002390591 -0.07769585 0.1698998 0.002390591 -0.09831388 0.1918019 0.1673906 -0.09404157 0.1928276 0.1673906" />
+    <mesh name="basket_wall_12" vertex="-0.07727037 0.1685899 0.002617622 -0.08103968 0.1670286 0.002617622 -0.1019477 0.1888107 0.1676176 -0.09788841 0.1904921 0.1676176 -0.07779851 0.169865 0.002382378 -0.08156782 0.1683037 0.002382378 -0.1024758 0.1900857 0.1673824 -0.09841655 0.1917671 0.1673824" />
+    <mesh name="basket_wall_13" vertex="-0.08094371 0.1670786 0.002623184 -0.08442238 0.1649469 0.002623184 -0.1055979 0.1865649 0.1676232 -0.1018517 0.1888606 0.1676232 -0.08166379 0.1682537 0.002376816 -0.08514246 0.166122 0.002376816 -0.106318 0.18774 0.1673768 -0.1025718 0.1900357 0.1673768" />
+    <mesh name="basket_wall_14" vertex="-0.08433523 0.1650109 0.002625991 -0.08743759 0.1623612 0.002625991 -0.1088518 0.1837754 0.167626 -0.1055108 0.1866289 0.167626 -0.08522961 0.166058 0.002374009 -0.08833197 0.1634084 0.002374009 -0.1097462 0.1848226 0.167374 -0.1064052 0.1876761 0.167374" />
+    <mesh name="basket_wall_15" vertex="-0.08736118 0.1624376 0.002625991 -0.09001085 0.1593352 0.002625991 -0.1116289 0.1805108 0.167626 -0.1087754 0.1838518 0.167626 -0.08840837 0.163332 0.002374009 -0.09105803 0.1602296 0.002374009 -0.1126761 0.1814052 0.167374 -0.1098226 0.1847462 0.167374" />
+    <mesh name="basket_wall_16" vertex="-0.08994691 0.1594224 0.002623184 -0.09207864 0.1559437 0.002623184 -0.1138606 0.1768517 0.1676232 -0.1115649 0.1805979 0.1676232 -0.09112198 0.1601425 0.002376816 -0.0932537 0.1566638 0.002376816 -0.1150357 0.1775718 0.1673768 -0.11274 0.181318 0.1673768" />
+    <mesh name="basket_wall_17" vertex="-0.09202865 0.1560397 0.002617622 -0.09358995 0.1522704 0.002617622 -0.1154921 0.1728884 0.1676176 -0.1138107 0.1769477 0.1676176 -0.09330369 0.1565678 0.002382378 -0.09486499 0.1527985 0.002382378 -0.1167671 0.1734165 0.1673824 -0.1150857 0.1774758 0.1673824" />
+    <mesh name="basket_wall_18" vertex="-0.09355518 0.152373 0.002609409 -0.0945076 0.1484059 0.002609409 -0.116483 0.1687188 0.1676094 -0.1154573 0.1729911 0.1676094 -0.09489976 0.1526958 0.002390591 -0.09585219 0.1487287 0.002390591 -0.1178276 0.1690416 0.1673906 -0.1168019 0.1733139 0.1673906" />
+    <mesh name="basket_wall_19" vertex="-0.09448604 0.1485665 0.002592504 -0.09480614 -0.1445008 0.002592504 -0.1168061 -0.1645008 0.1675925 -0.1164614 0.1688794 0.1675925 -0.09587376 0.1485681 0.002407496 -0.09619386 -0.1444992 0.002407496 -0.1181939 -0.1644992 0.1674075 -0.1178491 0.1688809 0.1674075" />
+    <mesh name="basket_wall_20" vertex="-0.09480913 -0.1444456 0.002598707 -0.09448903 -0.1485129 0.002598707 -0.1164644 -0.1688258 0.1675987 -0.1168091 -0.1644456 0.1675987 -0.09619087 -0.1445544 0.002401293 -0.09587077 -0.1486217 0.002401293 -0.1178461 -0.1689345 0.1674013 -0.1181909 -0.1645544 0.1674013" />
+    <mesh name="basket_wall_21" vertex="-0.0945076 -0.1484059 0.002609409 -0.09355518 -0.152373 0.002609409 -0.1154573 -0.1729911 0.1676094 -0.116483 -0.1687188 0.1676094 -0.09585219 -0.1487287 0.002390591 -0.09489976 -0.1526958 0.002390591 -0.1168019 -0.1733139 0.1673906 -0.1178276 -0.1690416 0.1673906" />
+    <mesh name="basket_wall_22" vertex="-0.09358995 -0.1522704 0.002617622 -0.09202865 -0.1560397 0.002617622 -0.1138107 -0.1769477 0.1676176 -0.1154921 -0.1728884 0.1676176 -0.09486499 -0.1527985 0.002382378 -0.09330369 -0.1565678 0.002382378 -0.1150857 -0.1774758 0.1673824 -0.1167671 -0.1734165 0.1673824" />
+    <mesh name="basket_wall_23" vertex="-0.09207864 -0.1559437 0.002623184 -0.08994691 -0.1594224 0.002623184 -0.1115649 -0.1805979 0.1676232 -0.1138606 -0.1768517 0.1676232 -0.0932537 -0.1566638 0.002376816 -0.09112198 -0.1601425 0.002376816 -0.11274 -0.181318 0.1673768 -0.1150357 -0.1775718 0.1673768" />
+    <mesh name="basket_wall_24" vertex="-0.09001085 -0.1593352 0.002625991 -0.08736118 -0.1624376 0.002625991 -0.1087754 -0.1838518 0.167626 -0.1116289 -0.1805108 0.167626 -0.09105803 -0.1602296 0.002374009 -0.08840837 -0.163332 0.002374009 -0.1098226 -0.1847462 0.167374 -0.1126761 -0.1814052 0.167374" />
+    <mesh name="basket_wall_25" vertex="-0.08743759 -0.1623612 0.002625991 -0.08433523 -0.1650109 0.002625991 -0.1055108 -0.1866289 0.167626 -0.1088518 -0.1837754 0.167626 -0.08833197 -0.1634084 0.002374009 -0.08522961 -0.166058 0.002374009 -0.1064052 -0.1876761 0.167374 -0.1097462 -0.1848226 0.167374" />
+    <mesh name="basket_wall_26" vertex="-0.08442238 -0.1649469 0.002623184 -0.08094371 -0.1670786 0.002623184 -0.1018517 -0.1888606 0.1676232 -0.1055979 -0.1865649 0.1676232 -0.08514246 -0.166122 0.002376816 -0.08166379 -0.1682537 0.002376816 -0.1025718 -0.1900357 0.1673768 -0.106318 -0.18774 0.1673768" />
+    <mesh name="basket_wall_27" vertex="-0.08103968 -0.1670286 0.002617622 -0.07727037 -0.1685899 0.002617622 -0.09788841 -0.1904921 0.1676176 -0.1019477 -0.1888107 0.1676176 -0.08156782 -0.1683037 0.002382378 -0.07779851 -0.169865 0.002382378 -0.09841655 -0.1917671 0.1673824 -0.1024758 -0.1900857 0.1673824" />
+    <mesh name="basket_wall_28" vertex="-0.07737304 -0.1685552 0.002609409 -0.07340589 -0.1695076 0.002609409 -0.09371876 -0.191483 0.1676094 -0.09799107 -0.1904573 0.1676094 -0.07769585 -0.1698998 0.002390591 -0.0737287 -0.1708522 0.002390591 -0.09404157 -0.1928276 0.1673906 -0.09831388 -0.1918019 0.1673906" />
+    <mesh name="basket_wall_29" vertex="-0.07356574 -0.1694861 0.0025926 0.06950155 -0.1698062 0.0025926 0.08950155 -0.1918062 0.1675926 -0.09387861 -0.1914614 0.1675926 -0.07356885 -0.1708737 0.0024074 0.06949845 -0.1711938 0.0024074 0.08949845 -0.1931938 0.1674074 -0.09388172 -0.1928491 0.1674074" />
+    <mesh name="basket_wall_30" vertex="0.06944563 -0.1698091 0.002598707 0.07351292 -0.169489 0.002598707 0.09382579 -0.1914644 0.1675987 0.08944563 -0.1918091 0.1675987 0.06955437 -0.1711909 0.002401293 0.07362167 -0.1708708 0.002401293 0.09393454 -0.1928461 0.1674013 0.08955437 -0.1931909 0.1674013" />
+    <mesh name="basket_wall_31" vertex="0.07340589 -0.1695076 0.002609409 0.07737304 -0.1685552 0.002609409 0.09799107 -0.1904573 0.1676094 0.09371876 -0.191483 0.1676094 0.0737287 -0.1708522 0.002390591 0.07769585 -0.1698998 0.002390591 0.09831388 -0.1918019 0.1673906 0.09404157 -0.1928276 0.1673906" />
+    <mesh name="basket_wall_32" vertex="0.07727037 -0.1685899 0.002617622 0.08103968 -0.1670286 0.002617622 0.1019477 -0.1888107 0.1676176 0.09788841 -0.1904921 0.1676176 0.07779851 -0.169865 0.002382378 0.08156782 -0.1683037 0.002382378 0.1024758 -0.1900857 0.1673824 0.09841655 -0.1917671 0.1673824" />
+    <mesh name="basket_wall_33" vertex="0.08094371 -0.1670786 0.002623184 0.08442238 -0.1649469 0.002623184 0.1055979 -0.1865649 0.1676232 0.1018517 -0.1888606 0.1676232 0.08166379 -0.1682537 0.002376816 0.08514246 -0.166122 0.002376816 0.106318 -0.18774 0.1673768 0.1025718 -0.1900357 0.1673768" />
+    <mesh name="basket_wall_34" vertex="0.08433523 -0.1650109 0.002625991 0.08743759 -0.1623612 0.002625991 0.1088518 -0.1837754 0.167626 0.1055108 -0.1866289 0.167626 0.08522961 -0.166058 0.002374009 0.08833197 -0.1634084 0.002374009 0.1097462 -0.1848226 0.167374 0.1064052 -0.1876761 0.167374" />
+    <mesh name="basket_wall_35" vertex="0.08736118 -0.1624376 0.002625991 0.09001085 -0.1593352 0.002625991 0.1116289 -0.1805108 0.167626 0.1087754 -0.1838518 0.167626 0.08840837 -0.163332 0.002374009 0.09105803 -0.1602296 0.002374009 0.1126761 -0.1814052 0.167374 0.1098226 -0.1847462 0.167374" />
+    <mesh name="basket_wall_36" vertex="0.08994691 -0.1594224 0.002623184 0.09207864 -0.1559437 0.002623184 0.1138606 -0.1768517 0.1676232 0.1115649 -0.1805979 0.1676232 0.09112198 -0.1601425 0.002376816 0.0932537 -0.1566638 0.002376816 0.1150357 -0.1775718 0.1673768 0.11274 -0.181318 0.1673768" />
+    <mesh name="basket_wall_37" vertex="0.09202865 -0.1560397 0.002617622 0.09358995 -0.1522704 0.002617622 0.1154921 -0.1728884 0.1676176 0.1138107 -0.1769477 0.1676176 0.09330369 -0.1565678 0.002382378 0.09486499 -0.1527985 0.002382378 0.1167671 -0.1734165 0.1673824 0.1150857 -0.1774758 0.1673824" />
+    <mesh name="basket_wall_38" vertex="0.09355518 -0.152373 0.002609409 0.0945076 -0.1484059 0.002609409 0.116483 -0.1687188 0.1676094 0.1154573 -0.1729911 0.1676094 0.09489976 -0.1526958 0.002390591 0.09585219 -0.1487287 0.002390591 0.1178276 -0.1690416 0.1673906 0.1168019 -0.1733139 0.1673906" />
+    <mesh name="basket_wall_39" vertex="0.09448604 -0.1485665 0.002592504 0.09480614 0.1445008 0.002592504 0.1168061 0.1645008 0.1675925 0.1164614 -0.1688794 0.1675925 0.09587376 -0.1485681 0.002407496 0.09619386 0.1444992 0.002407496 0.1181939 0.1644992 0.1674075 0.1178491 -0.1688809 0.1674075" />
+    <mesh name="basket_bottom_collision" file="../../../../../scenes/inspire/basket_chair/assets/basket_bottom_collision.obj" />
+  </asset>
+  <worldbody>
+    <light pos="-.3 .2 2.8" dir=".2 0 -1" diffuse=".8 .77 .70" castshadow="true" />
+    <light pos=".4 1.5 2.2" dir="0 -1 -1" diffuse=".35 .35 .35" castshadow="false" />
+    <geom name="photo_floor" type="plane" size="3 3 .02" material="photo_carpet" class="photo_support" />
+    <body name="photo_screen_0" pos="0.8455442 -0.675 0.93" euler="0 0 1.515298">
+      <geom type="box" size="0.225347 0.009 0.9" material="photo_fabric" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="-0.225347 0 -0.9 -0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="0.225347 0 -0.9 0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+    </body>
+    <body name="photo_screen_1" pos="0.8455442 -0.225 0.93" euler="0 0 1.626295">
+      <geom type="box" size="0.225347 0.009 0.9" material="photo_fabric" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="-0.225347 0 -0.9 -0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="0.225347 0 -0.9 0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+    </body>
+    <body name="photo_screen_2" pos="0.8455442 0.225 0.93" euler="0 0 1.515298">
+      <geom type="box" size="0.225347 0.009 0.9" material="photo_fabric" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="-0.225347 0 -0.9 -0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="0.225347 0 -0.9 0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+    </body>
+    <body name="photo_screen_3" pos="0.8455442 0.675 0.93" euler="0 0 1.626295">
+      <geom type="box" size="0.225347 0.009 0.9" material="photo_fabric" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="-0.225347 0 -0.9 -0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+      <geom type="capsule" size="0.008" fromto="0.225347 0 -0.9 0.225347 0 0.9" material="photo_screen_frame" class="photo_support" />
+    </body>
+    <body name="photo_chair" pos="0.405 0 0">
+      <geom name="chair_seat" type="mesh" material="chair_red" class="photo_support" mesh="chair_seat_mesh" pos="0 0 0.4025" />
+      <geom name="chair_seat_shell" type="box" material="chair_grey" class="photo_support" size="0.2 0.2 0.01" pos="0 0 0.371" />
+      <geom name="chair_piston" type="cylinder" material="chair_grey" class="photo_support" size=".028 .125" pos="0 0 .24" />
+      <geom name="chair_hub" type="cylinder" material="chair_grey" class="photo_support" size=".054 .045" pos="0 0 .115" />
+      <geom name="chair_spoke_0" type="capsule" material="chair_grey" class="photo_support" size=".022" fromto="-0.035 4.286264e-18 0.14 -0.275 3.367779e-17 0.066" />
+      <geom name="chair_wheel_0_-1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.275 0.01 0.03" euler="1.570796 0 3.141593" />
+      <geom name="chair_wheel_0_1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.275 -0.01 0.03" euler="1.570796 0 3.141593" />
+      <geom name="chair_spoke_1" type="capsule" material="chair_grey" class="photo_support" size=".022" fromto="-0.01081559 -0.03328698 0.14 -0.08497967 -0.2615405 0.066" />
+      <geom name="chair_wheel_1_-1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.09449024 -0.2584504 0.03" euler="1.570796 0 4.39823" />
+      <geom name="chair_wheel_1_1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.07546911 -0.2646307 0.03" euler="1.570796 0 4.39823" />
+      <geom name="chair_spoke_2" type="capsule" material="chair_grey" class="photo_support" size=".022" fromto="0.02831559 -0.02057248 0.14 0.2224797 -0.1616409 0.066" />
+      <geom name="chair_wheel_2_-1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="0.2166018 -0.1697311 0.03" euler="1.570796 0 5.654867" />
+      <geom name="chair_wheel_2_1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="0.2283575 -0.1535508 0.03" euler="1.570796 0 5.654867" />
+      <geom name="chair_spoke_3" type="capsule" material="chair_grey" class="photo_support" size=".022" fromto="0.02831559 0.02057248 0.14 0.2224797 0.1616409 0.066" />
+      <geom name="chair_wheel_3_-1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="0.2283575 0.1535508 0.03" euler="1.570796 0 6.911504" />
+      <geom name="chair_wheel_3_1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="0.2166018 0.1697311 0.03" euler="1.570796 0 6.911504" />
+      <geom name="chair_spoke_4" type="capsule" material="chair_grey" class="photo_support" size=".022" fromto="-0.01081559 0.03328698 0.14 -0.08497967 0.2615405 0.066" />
+      <geom name="chair_wheel_4_-1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.07546911 0.2646307 0.03" euler="1.570796 0 8.168141" />
+      <geom name="chair_wheel_4_1" type="cylinder" material="chair_grey" class="photo_support" size=".03 .009" pos="-0.09449024 0.2584504 0.03" euler="1.570796 0 8.168141" />
+      <geom name="chair_back" type="mesh" material="chair_red" class="photo_support" mesh="chair_back_mesh" pos="0.213 0 0.655" euler="0 1.570796 0" />
+      <geom name="chair_back_shell" type="box" material="chair_grey" class="photo_support" size="0.01 0.17 0.16" pos="0.2405 0 0.655" />
+      <geom name="chair_back_support_-1" type="capsule" material="chair_grey" class="photo_support" size=".012" fromto="0.09 -0.12 0.37 0.221 -0.12 0.57" />
+      <geom name="chair_back_support_1" type="capsule" material="chair_grey" class="photo_support" size=".012" fromto="0.09 0.12 0.37 0.221 0.12 0.57" />
+      <site name="chair_seat_top" pos="0 0 0.43" size="0.002" rgba="0 0 0 0" />
+    </body>
+    <body name="manipulatable_box" pos="0.405 0 0.431" euler="0 0 0">
+      <freejoint name="box_joint" />
+      <inertial pos="0 0 0.0816" mass="0.65" diaginertia="0.009804167 0.004685417 0.01135875" />
+      <geom name="basket_wire_visual" type="mesh" material="basket_white" contype="0" conaffinity="0" mass="0" mesh="basket_wire" />
+      <geom name="basket_rim_00" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1175 0.1645 0.1675 0.1171553 0.1688802 0.1675" />
+      <geom name="basket_rim_01" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1171553 0.1688802 0.1675 0.1161296 0.1731525 0.1675" />
+      <geom name="basket_rim_02" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1161296 0.1731525 0.1675 0.1144482 0.1772117 0.1675" />
+      <geom name="basket_rim_03" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1144482 0.1772117 0.1675 0.1121525 0.180958 0.1675" />
+      <geom name="basket_rim_04" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1121525 0.180958 0.1675 0.109299 0.184299 0.1675" />
+      <geom name="basket_rim_05" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.109299 0.184299 0.1675 0.105958 0.1871525 0.1675" />
+      <geom name="basket_rim_06" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.105958 0.1871525 0.1675 0.1022117 0.1894482 0.1675" />
+      <geom name="basket_rim_07" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1022117 0.1894482 0.1675 0.09815248 0.1911296 0.1675" />
+      <geom name="basket_rim_08" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09815248 0.1911296 0.1675 0.09388017 0.1921553 0.1675" />
+      <geom name="basket_rim_09" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09388017 0.1921553 0.1675 -0.0895 0.1925 0.1675" />
+      <geom name="basket_rim_10" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0895 0.1925 0.1675 -0.09388017 0.1921553 0.1675" />
+      <geom name="basket_rim_11" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09388017 0.1921553 0.1675 -0.09815248 0.1911296 0.1675" />
+      <geom name="basket_rim_12" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09815248 0.1911296 0.1675 -0.1022117 0.1894482 0.1675" />
+      <geom name="basket_rim_13" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1022117 0.1894482 0.1675 -0.105958 0.1871525 0.1675" />
+      <geom name="basket_rim_14" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.105958 0.1871525 0.1675 -0.109299 0.184299 0.1675" />
+      <geom name="basket_rim_15" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.109299 0.184299 0.1675 -0.1121525 0.180958 0.1675" />
+      <geom name="basket_rim_16" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1121525 0.180958 0.1675 -0.1144482 0.1772117 0.1675" />
+      <geom name="basket_rim_17" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1144482 0.1772117 0.1675 -0.1161296 0.1731525 0.1675" />
+      <geom name="basket_rim_18" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1161296 0.1731525 0.1675 -0.1171553 0.1688802 0.1675" />
+      <geom name="basket_rim_19" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1171553 0.1688802 0.1675 -0.1175 -0.1645 0.1675" />
+      <geom name="basket_rim_20" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1175 -0.1645 0.1675 -0.1171553 -0.1688802 0.1675" />
+      <geom name="basket_rim_21" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1171553 -0.1688802 0.1675 -0.1161296 -0.1731525 0.1675" />
+      <geom name="basket_rim_22" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1161296 -0.1731525 0.1675 -0.1144482 -0.1772117 0.1675" />
+      <geom name="basket_rim_23" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1144482 -0.1772117 0.1675 -0.1121525 -0.180958 0.1675" />
+      <geom name="basket_rim_24" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1121525 -0.180958 0.1675 -0.109299 -0.184299 0.1675" />
+      <geom name="basket_rim_25" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.109299 -0.184299 0.1675 -0.105958 -0.1871525 0.1675" />
+      <geom name="basket_rim_26" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.105958 -0.1871525 0.1675 -0.1022117 -0.1894482 0.1675" />
+      <geom name="basket_rim_27" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.1022117 -0.1894482 0.1675 -0.09815248 -0.1911296 0.1675" />
+      <geom name="basket_rim_28" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09815248 -0.1911296 0.1675 -0.09388017 -0.1921553 0.1675" />
+      <geom name="basket_rim_29" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09388017 -0.1921553 0.1675 0.0895 -0.1925 0.1675" />
+      <geom name="basket_rim_30" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0895 -0.1925 0.1675 0.09388017 -0.1921553 0.1675" />
+      <geom name="basket_rim_31" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09388017 -0.1921553 0.1675 0.09815248 -0.1911296 0.1675" />
+      <geom name="basket_rim_32" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09815248 -0.1911296 0.1675 0.1022117 -0.1894482 0.1675" />
+      <geom name="basket_rim_33" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1022117 -0.1894482 0.1675 0.105958 -0.1871525 0.1675" />
+      <geom name="basket_rim_34" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.105958 -0.1871525 0.1675 0.109299 -0.184299 0.1675" />
+      <geom name="basket_rim_35" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.109299 -0.184299 0.1675 0.1121525 -0.180958 0.1675" />
+      <geom name="basket_rim_36" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1121525 -0.180958 0.1675 0.1144482 -0.1772117 0.1675" />
+      <geom name="basket_rim_37" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1144482 -0.1772117 0.1675 0.1161296 -0.1731525 0.1675" />
+      <geom name="basket_rim_38" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1161296 -0.1731525 0.1675 0.1171553 -0.1688802 0.1675" />
+      <geom name="basket_rim_39" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.1171553 -0.1688802 0.1675 0.1175 0.1645 0.1675" />
+      <geom name="basket_foot_00" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0955 0.1445 0.0025 0.0951799 0.1485673 0.0025" />
+      <geom name="basket_foot_01" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0951799 0.1485673 0.0025 0.09422747 0.1525344 0.0025" />
+      <geom name="basket_foot_02" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09422747 0.1525344 0.0025 0.09266617 0.1563038 0.0025" />
+      <geom name="basket_foot_03" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09266617 0.1563038 0.0025 0.09053444 0.1597824 0.0025" />
+      <geom name="basket_foot_04" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09053444 0.1597824 0.0025 0.08788478 0.1628848 0.0025" />
+      <geom name="basket_foot_05" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08788478 0.1628848 0.0025 0.08478242 0.1655344 0.0025" />
+      <geom name="basket_foot_06" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08478242 0.1655344 0.0025 0.08130375 0.1676662 0.0025" />
+      <geom name="basket_foot_07" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08130375 0.1676662 0.0025 0.07753444 0.1692275 0.0025" />
+      <geom name="basket_foot_08" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.07753444 0.1692275 0.0025 0.0735673 0.1701799 0.0025" />
+      <geom name="basket_foot_09" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0735673 0.1701799 0.0025 -0.0695 0.1705 0.0025" />
+      <geom name="basket_foot_10" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0695 0.1705 0.0025 -0.0735673 0.1701799 0.0025" />
+      <geom name="basket_foot_11" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0735673 0.1701799 0.0025 -0.07753444 0.1692275 0.0025" />
+      <geom name="basket_foot_12" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.07753444 0.1692275 0.0025 -0.08130375 0.1676662 0.0025" />
+      <geom name="basket_foot_13" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08130375 0.1676662 0.0025 -0.08478242 0.1655344 0.0025" />
+      <geom name="basket_foot_14" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08478242 0.1655344 0.0025 -0.08788478 0.1628848 0.0025" />
+      <geom name="basket_foot_15" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08788478 0.1628848 0.0025 -0.09053444 0.1597824 0.0025" />
+      <geom name="basket_foot_16" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09053444 0.1597824 0.0025 -0.09266617 0.1563038 0.0025" />
+      <geom name="basket_foot_17" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09266617 0.1563038 0.0025 -0.09422747 0.1525344 0.0025" />
+      <geom name="basket_foot_18" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09422747 0.1525344 0.0025 -0.0951799 0.1485673 0.0025" />
+      <geom name="basket_foot_19" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0951799 0.1485673 0.0025 -0.0955 -0.1445 0.0025" />
+      <geom name="basket_foot_20" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0955 -0.1445 0.0025 -0.0951799 -0.1485673 0.0025" />
+      <geom name="basket_foot_21" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0951799 -0.1485673 0.0025 -0.09422747 -0.1525344 0.0025" />
+      <geom name="basket_foot_22" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09422747 -0.1525344 0.0025 -0.09266617 -0.1563038 0.0025" />
+      <geom name="basket_foot_23" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09266617 -0.1563038 0.0025 -0.09053444 -0.1597824 0.0025" />
+      <geom name="basket_foot_24" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.09053444 -0.1597824 0.0025 -0.08788478 -0.1628848 0.0025" />
+      <geom name="basket_foot_25" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08788478 -0.1628848 0.0025 -0.08478242 -0.1655344 0.0025" />
+      <geom name="basket_foot_26" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08478242 -0.1655344 0.0025 -0.08130375 -0.1676662 0.0025" />
+      <geom name="basket_foot_27" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.08130375 -0.1676662 0.0025 -0.07753444 -0.1692275 0.0025" />
+      <geom name="basket_foot_28" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.07753444 -0.1692275 0.0025 -0.0735673 -0.1701799 0.0025" />
+      <geom name="basket_foot_29" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="-0.0735673 -0.1701799 0.0025 0.0695 -0.1705 0.0025" />
+      <geom name="basket_foot_30" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0695 -0.1705 0.0025 0.0735673 -0.1701799 0.0025" />
+      <geom name="basket_foot_31" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0735673 -0.1701799 0.0025 0.07753444 -0.1692275 0.0025" />
+      <geom name="basket_foot_32" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.07753444 -0.1692275 0.0025 0.08130375 -0.1676662 0.0025" />
+      <geom name="basket_foot_33" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08130375 -0.1676662 0.0025 0.08478242 -0.1655344 0.0025" />
+      <geom name="basket_foot_34" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08478242 -0.1655344 0.0025 0.08788478 -0.1628848 0.0025" />
+      <geom name="basket_foot_35" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.08788478 -0.1628848 0.0025 0.09053444 -0.1597824 0.0025" />
+      <geom name="basket_foot_36" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09053444 -0.1597824 0.0025 0.09266617 -0.1563038 0.0025" />
+      <geom name="basket_foot_37" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09266617 -0.1563038 0.0025 0.09422747 -0.1525344 0.0025" />
+      <geom name="basket_foot_38" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.09422747 -0.1525344 0.0025 0.0951799 -0.1485673 0.0025" />
+      <geom name="basket_foot_39" type="capsule" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" size="0.0025" fromto="0.0951799 -0.1485673 0.0025 0.0955 0.1445 0.0025" />
+      <geom name="basket_wall_00" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_00" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_01" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_01" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_02" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_02" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_03" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_03" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_04" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_04" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_05" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_05" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_06" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_06" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_07" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_07" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_08" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_08" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_09" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_09" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_10" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_10" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_11" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_11" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_12" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_12" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_13" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_13" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_14" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_14" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_15" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_15" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_16" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_16" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_17" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_17" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_18" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_18" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_19" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_19" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_20" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_20" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_21" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_21" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_22" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_22" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_23" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_23" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_24" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_24" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_25" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_25" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_26" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_26" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_27" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_27" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_28" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_28" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_29" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_29" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_30" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_30" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_31" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_31" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_32" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_32" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_33" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_33" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_34" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_34" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_35" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_35" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_36" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_36" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_37" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_37" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_38" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_38" rgba="0 0 0 0" group="3" />
+      <geom name="basket_wall_39" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_wall_39" rgba="0 0 0 0" group="3" />
+      <geom name="basket_bottom" type="mesh" material="basket_white" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" mesh="basket_bottom_collision" rgba="0 0 0 0" group="3" />
+      <geom name="basket_bottom_rail_x_-1" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" size="0.006 0.159 0.001" pos="-0.0528 0 0.004" />
+      <geom name="basket_bottom_rail_y_-1" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" size="0.0588 0.006 0.001" pos="0 -0.153 0.004" />
+      <geom name="basket_bottom_rail_x_1" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" size="0.006 0.159 0.001" pos="0.0528 0 0.004" />
+      <geom name="basket_bottom_rail_y_1" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" size="0.0588 0.006 0.001" pos="0 0.153 0.004" />
+      <geom name="basket_handle_-1_00" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.116 -0.1715 0.158" size="0.02165 0.004 0.009" euler="0 0 -1.570796" />
+      <geom name="basket_handle_-1_01" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1157873 -0.1954311 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.48353" />
+      <geom name="basket_handle_-1_02" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.114943 -0.2002194 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.308997" />
+      <geom name="basket_handle_-1_03" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1132801 -0.2047883 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.134464" />
+      <geom name="basket_handle_-1_04" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.110849 -0.208999 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.9599311" />
+      <geom name="basket_handle_-1_05" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1077236 -0.2127236 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.7853982" />
+      <geom name="basket_handle_-1_06" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.103999 -0.215849 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.6108652" />
+      <geom name="basket_handle_-1_07" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09978828 -0.2182801 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.4363323" />
+      <geom name="basket_handle_-1_08" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09521936 -0.219943 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.2617994" />
+      <geom name="basket_handle_-1_09" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09043107 -0.2207873 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.08726646" />
+      <geom name="basket_handle_-1_10" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0 -0.221 0.158" size="0.08815 0.004 0.009" euler="0 0 0" />
+      <geom name="basket_handle_-1_11" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09043107 -0.2207873 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.08726646" />
+      <geom name="basket_handle_-1_12" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09521936 -0.219943 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.2617994" />
+      <geom name="basket_handle_-1_13" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09978828 -0.2182801 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.4363323" />
+      <geom name="basket_handle_-1_14" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.103999 -0.215849 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.6108652" />
+      <geom name="basket_handle_-1_15" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1077236 -0.2127236 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.7853982" />
+      <geom name="basket_handle_-1_16" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.110849 -0.208999 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.9599311" />
+      <geom name="basket_handle_-1_17" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1132801 -0.2047883 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.134464" />
+      <geom name="basket_handle_-1_18" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.114943 -0.2002194 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.308997" />
+      <geom name="basket_handle_-1_19" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1157873 -0.1954311 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.48353" />
+      <geom name="basket_handle_-1_20" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.116 -0.1715 0.158" size="0.02165 0.004 0.009" euler="0 0 1.570796" />
+      <site name="basket_right_grip" pos="0 -0.221 0.158" size="0.003" rgba="0 0 0 0" />
+      <geom name="basket_zip_tie_-1_-1_0.025" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="-0.116 -0.17 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_-1_-1_0.04" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="-0.116 -0.155 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_-1_1_0.025" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="0.116 -0.17 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_-1_1_0.04" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="0.116 -0.155 0.158" size=".005 .0018 .010" />
+      <geom name="basket_handle_1_00" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.116 0.1715 0.158" size="0.02165 0.004 0.009" euler="0 0 1.570796" />
+      <geom name="basket_handle_1_01" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1157873 0.1954311 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.48353" />
+      <geom name="basket_handle_1_02" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.114943 0.2002194 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.308997" />
+      <geom name="basket_handle_1_03" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1132801 0.2047883 0.158" size="0.002590361 0.004 0.009" euler="0 0 1.134464" />
+      <geom name="basket_handle_1_04" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.110849 0.208999 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.9599311" />
+      <geom name="basket_handle_1_05" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.1077236 0.2127236 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.7853982" />
+      <geom name="basket_handle_1_06" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.103999 0.215849 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.6108652" />
+      <geom name="basket_handle_1_07" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09978828 0.2182801 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.4363323" />
+      <geom name="basket_handle_1_08" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09521936 0.219943 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.2617994" />
+      <geom name="basket_handle_1_09" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="-0.09043107 0.2207873 0.158" size="0.002590361 0.004 0.009" euler="0 0 0.08726646" />
+      <geom name="basket_handle_1_10" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0 0.221 0.158" size="0.08815 0.004 0.009" euler="0 0 0" />
+      <geom name="basket_handle_1_11" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09043107 0.2207873 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.08726646" />
+      <geom name="basket_handle_1_12" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09521936 0.219943 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.2617994" />
+      <geom name="basket_handle_1_13" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.09978828 0.2182801 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.4363323" />
+      <geom name="basket_handle_1_14" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.103999 0.215849 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.6108652" />
+      <geom name="basket_handle_1_15" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1077236 0.2127236 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.7853982" />
+      <geom name="basket_handle_1_16" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.110849 0.208999 0.158" size="0.002590361 0.004 0.009" euler="0 0 -0.9599311" />
+      <geom name="basket_handle_1_17" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1132801 0.2047883 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.134464" />
+      <geom name="basket_handle_1_18" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.114943 0.2002194 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.308997" />
+      <geom name="basket_handle_1_19" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.1157873 0.1954311 0.158" size="0.002590361 0.004 0.009" euler="0 0 -1.48353" />
+      <geom name="basket_handle_1_20" type="box" material="basket_wood" class="photo_object" mass="0" condim="6" friction="0.8 0.01 0.001" pos="0.116 0.1715 0.158" size="0.02165 0.004 0.009" euler="0 0 -1.570796" />
+      <site name="basket_left_grip" pos="0 0.221 0.158" size="0.003" rgba="0 0 0 0" />
+      <geom name="basket_zip_tie_1_-1_0.025" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="-0.116 0.17 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_1_-1_0.04" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="-0.116 0.155 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_1_1_0.025" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="0.116 0.17 0.158" size=".005 .0018 .010" />
+      <geom name="basket_zip_tie_1_1_0.04" type="box" material="basket_white" contype="0" conaffinity="0" mass="0" pos="0.116 0.155 0.158" size=".005 .0018 .010" />
+      <site name="manipulatable_box_site" pos="0 0 0.085" size="0.003" rgba="0 0 0 0" />
+    </body>
+    <camera name="basket_chair_overview" pos="-1.2 1.55 1.55" xyaxes="-0.7139825 -0.7001635 0 0.2604552 -0.2655957 0.928236" fovy="49" />
+    <camera name="basket_chair_front" pos="-0.145 -1.1 1.03" xyaxes="0.8944272 -0.4472136 0 0.1934374 0.3868748 0.9016151" fovy="47" />
+    <camera name="basket_closeup" pos="0.175 -0.43 1.081" xyaxes="0.8817846 -0.4716523 0 0.355694 0.6649932 0.6567084" fovy="45" />
+  </worldbody>
+  <keyframe>
+    <key name="photo_arms_down" qpos="0 0 0.793 1 0 0 0 -0.312 0 0 0.669 -0.363 0 -0.312 0 0 0.669 -0.363 0 0 0 0 0.1 0.12 0 1.45 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 -0.12 0 1.45 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.405 0 0.431 1 0 0 0" />
+  </keyframe>
+</mujoco>

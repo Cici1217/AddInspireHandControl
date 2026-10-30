@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from gear_sonic.utils.hand_control.inspire.config import load_mapping
-from gear_sonic.utils.hand_control.inspire.contract import (
+from gear_sonic.devices.inspire.config import load_mapping
+from gear_sonic.devices.inspire.contract import (
     ContractError,
     HandStatus,
     InspireHandCommand,
 )
-from gear_sonic.utils.hand_control.inspire.safety import CommandGuard, SafetyConfig
+from gear_sonic.devices.inspire.safety import CommandGuard, SafetyConfig
 
 
 def command(sequence, timestamp, value=0.0):

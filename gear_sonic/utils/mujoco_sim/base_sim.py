@@ -150,6 +150,8 @@ class DefaultEnv:
         xml_path = str(pathlib.Path(GEAR_SONIC_ROOT) / self.config["ROBOT_SCENE"])
         self.mj_model = mujoco.MjModel.from_xml_path(xml_path)
         self.mj_data = mujoco.MjData(self.mj_model)
+        if self.config.get("INITIAL_KEYFRAME"):
+            self.reset()
         self.mj_model.opt.timestep = self.sim_dt
         self.torso_index = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, "torso_link")
         self.root_body = "pelvis"
@@ -567,7 +569,19 @@ class DefaultEnv:
         return self_collision
 
     def reset(self):
-        mujoco.mj_resetData(self.mj_model, self.mj_data)
+        keyframe = self.config.get("INITIAL_KEYFRAME")
+        if keyframe:
+            key_id = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_KEY, keyframe)
+            if key_id < 0:
+                available = [mujoco.mj_id2name(self.mj_model, mujoco.mjtObj.mjOBJ_KEY, i)
+                             for i in range(self.mj_model.nkey)]
+                names = ', '.join(name for name in available if name) or '(none)'
+                raise ValueError(f"initial keyframe not found: {keyframe}; available in this scene: {names}. "
+                                 "Clear --initial-keyframe to use the scene default.")
+            mujoco.mj_resetDataKeyframe(self.mj_model, self.mj_data, key_id)
+            mujoco.mj_forward(self.mj_model, self.mj_data)
+        else:
+            mujoco.mj_resetData(self.mj_model, self.mj_data)
         if self.hand_controller is not None:
             self.hand_controller.reset()
 
@@ -577,7 +591,7 @@ class BaseSimulator:
 
     def __init__(
         self, config: Dict[str, any], env_name: str = "default", redis_client=None,
-        hand_controller_factory=None, **kwargs
+        hand_controller_factory=None, env_factory=None, **kwargs
     ):
         self.config = config
         self.env_name = env_name
@@ -598,7 +612,7 @@ class BaseSimulator:
 
         # Create the environment
         if env_name == "default":
-            self.sim_env = DefaultEnv(config, env_name, **kwargs)
+            self.sim_env = (env_factory or DefaultEnv)(config, env_name, **kwargs)
         else:
             raise ValueError(
                 f"Invalid environment name: {env_name}. "
@@ -697,6 +711,10 @@ class BaseSimulator:
 
     def close(self):
         self._running = False
+        # Construction can fail before the environment is assigned (e.g. an
+        # invalid scene keyframe). Cleanup must preserve that original error.
+        if getattr(self, 'sim_env', None) is None:
+            return
         if self.sim_env.hand_controller is not None:
             self.sim_env.hand_controller.close()
         try:

@@ -23,6 +23,31 @@
 
 # GR00T-WholeBodyControl
 
+
+The Inspire console is started from this checkout with `python3 -m gear_sonic.scripts.run_console`. Open `http://127.0.0.1:8765` and use **Common settings / 公共配置 / 共通設定** for downloads, local paths, G1 connection settings, and environment installation/checks. See [console usage](docs/source/tutorials/console.md).
+
+Machine settings are generated locally in `configs/console/profiles.json`; recordings, calibration, checkpoints, logs, and private notes belong under `outputs/`. These are excluded from Git, as are real `.env` / `bridge.env` files, private keys, virtual environments, and compiled caches. Commit configuration examples only. Replace `g1.example.invalid` and the sample checkpoint path in Common settings before using real hardware or VLA. Existing local profiles are preserved.
+
+本分支主要使用 G1 + Inspire，保留原版 Dex3 身体仿真与动作回放。网页入口为 `http://127.0.0.1:8765`，启动命令：`python3 -m gear_sonic.scripts.run_console`。
+
+自定义代码按用途查找：
+
+| 位置 | 内容 |
+|---|---|
+| `gear_sonic/devices/inspire/` | Inspire 驱动客户端、仿真、光学手、采集回放、VLA |
+| `gear_sonic_deploy/inspire/native/` | G1 上运行的 C++ 手部网关 |
+| `gear_sonic/utils/console/` | 8765 网页与任务启动 |
+| `gear_sonic/utils/teleop/` | PICO 输入与身体参考传输 |
+| `gear_sonic/utils/inference/` | SONIC 会话、模型客户端、准备姿态 |
+| `gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/body_pose.hpp` | C++ 身体姿态校验与上身关节顺序，仿真 / 真机共用 |
+| `gear_sonic/camera/` | G1 相机服务与 RGB-D 编解码 |
+| `gear_sonic/data/poses/g1/` | 准备姿态文件 |
+| `scenes/inspire/`、`scenes/dex3/` | 仿真场景 |
+
+Inspire Python 实现统一从 `gear_sonic.devices.inspire` 导入；不再提供第三方设备安装、卸载和模块管理。原来的手部命令行入口和模型文件路径继续兼容。操作流程见[控制台说明](docs/source/tutorials/console.md)与[VLA 推理](docs/source/tutorials/vla_inspire.md)。
+
+当前真机部署统一位于 `/home/unitree/inspire_hand_bridge/`：`sonic/`、`hand_bridge/`、`camera_server/` 分别运行身体、手部和相机。01–07 的运行链路不再引用旧的 `g1_native6_sim2real` 或 G1 上旧的完整项目。电脑仍需要配置独立的 Isaac-GR00T 模型运行库，以及 TensorRT、XRoboToolkit 等依赖；它们不属于待废弃的旧 SONIC 项目。
+
 This is the codebase for the **GR00T Whole-Body Control (WBC)** projects. It hosts model checkpoints and scripts for training, evaluating, and deploying advanced whole-body controllers for humanoid robots. We currently support:
 
 - **Decoupled WBC**: the decoupled controller (RL for lower body, and IK for upper body) used in NVIDIA GR00T [N1.5](https://research.nvidia.com/labs/gear/gr00t-n1_5/) and [N1.6](https://research.nvidia.com/labs/gear/gr00t-n1_6/) models;

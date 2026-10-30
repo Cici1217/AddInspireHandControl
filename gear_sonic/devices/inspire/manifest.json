@@ -1,0 +1,582 @@
+{
+  "schema": "end_effector.device.v2",
+  "description": {
+    "device_id": "inspire",
+    "version": "1",
+    "label": "Inspire Hand",
+    "physical_joints": [
+      "inspire_thumb_rotation_joint",
+      "inspire_thumb_bend_joint",
+      "inspire_internal_thumb_intermediate_joint",
+      "inspire_internal_thumb_distal_joint",
+      "inspire_index_joint",
+      "inspire_internal_index_intermediate_joint",
+      "inspire_middle_joint",
+      "inspire_internal_middle_intermediate_joint",
+      "inspire_ring_joint",
+      "inspire_internal_ring_intermediate_joint",
+      "inspire_pinky_joint",
+      "inspire_internal_pinky_intermediate_joint"
+    ],
+    "state_channels": [
+      {
+        "name": "pinky",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "ring",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "middle",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "index",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "thumb_bend",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 0.6,
+        "max_rate": 1
+      },
+      {
+        "name": "thumb_rotation",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.3,
+        "max_rate": 1
+      }
+    ],
+    "action_channels": [
+      {
+        "name": "pinky",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "ring",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "middle",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "index",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.7,
+        "max_rate": 2
+      },
+      {
+        "name": "thumb_bend",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 0.6,
+        "max_rate": 1
+      },
+      {
+        "name": "thumb_rotation",
+        "unit": "rad",
+        "lower": 0,
+        "upper": 1.3,
+        "max_rate": 1
+      }
+    ],
+    "control_mode": "position",
+    "command_hz": 50,
+    "feedback_hz": 50,
+    "stale_after_s": 0.3
+  },
+  "backends": {
+    "sim": {
+      "mode": "sim",
+      "capture_source": "local",
+      "factory": "./adapter.py:InspireAdapter",
+      "requires": [
+        "numpy",
+        "mujoco",
+        "yaml"
+      ],
+      "capabilities": [
+        "control",
+        "teleop",
+        "capture"
+      ]
+    },
+    "sim_shared": {
+      "mode": "sim",
+      "capture_source": "streams",
+      "recorder": "./recording/collector.py:record_episode",
+      "factory": "./adapter.py:InspireAdapter",
+      "requires": [
+        "numpy",
+        "zmq",
+        "msgpack",
+        "yaml"
+      ],
+      "capabilities": [
+        "control",
+        "teleop",
+        "capture",
+        "body",
+        "replay",
+        "scene",
+        "dataset_replay",
+        "inference"
+      ]
+    },
+    "real": {
+      "mode": "real",
+      "capture_source": "streams",
+      "recorder": "./recording/collector.py:record_episode",
+      "factory": "./adapter.py:InspireAdapter",
+      "requires": [
+        "numpy",
+        "zmq",
+        "msgpack",
+        "yaml"
+      ],
+      "capabilities": [
+        "control",
+        "teleop",
+        "capture",
+        "body",
+        "replay",
+        "scene",
+        "dataset_replay",
+        "inference"
+      ]
+    }
+  },
+  "retargeting": {
+    "factory": "./retargeting.py:InspireRetargeter",
+    "version": "inspire-optical-v1"
+  },
+  "integration": {
+    "legacy_target_fields": {
+      "left": "task.left_target",
+      "right": "task.right_target"
+    },
+    "hand_python": true,
+    "sequence_cli": {
+      "module": "inspire_hand_example",
+      "backend_names": {
+        "sim_shared": "sim-remote",
+        "sim": "sim",
+        "real": "real"
+      },
+      "arguments": [
+        "--backend",
+        "{backend}",
+        "--config",
+        "{hand_config}",
+        "--sequence",
+        "--duration",
+        "{seconds}"
+      ]
+    },
+    "factory": "./integration.py:InspireSonicIntegration",
+    "kind": "sonic",
+    "sonic_hand": "inspire",
+    "hand_config": true,
+    "default_sim_backend": "sim_shared",
+    "default_real_backend": "real",
+    "configuration_files": {
+      "hand_config": {
+        "required": true
+      },
+      "calibration": {
+        "required": false,
+        "default": "outputs/inspire_calibrations/pico_hands.json"
+      }
+    },
+    "policy_compatibility": "G1 body29 + native6 hands, original SONIC body policy; existing project integration, no new real-robot validation in this task.",
+    "simulation_factory": "./integration.py:InspireSonicIntegration",
+    "native_hand": "external",
+    "console_hand_bridge": {
+      "argv": [
+        "bash",
+        "{g1.hand_script}"
+      ],
+      "cwd": "{g1.hand_root}",
+      "machine": "g1",
+      "note": "通过 SSH 启动设备桥接；串口及端口配置来自 {g1.hand_root}/bridge.env。"
+    },
+    "tunnel_ports": [
+      "hand_command",
+      "hand_state"
+    ],
+    "dataset_replay": "./replay.py:run",
+    "hand_actions": {
+      "open": {
+        "label": "双手张开",
+        "target": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "close": {
+        "label": "双手合拢",
+        "target": [
+          1.7,
+          1.7,
+          1.7,
+          1.7,
+          0.6,
+          0.3
+        ]
+      },
+      "sequence": {
+        "label": "逐个手指开合",
+        "operation": "sequence"
+      }
+    },
+    "inference": "./inference.py:run",
+    "policy_check": "./policy.py:check_checkpoint"
+  },
+  "package": {
+    "version": "1.1.0",
+    "resources": {
+      "urdf": {
+        "path": "assets/g1_29dof_rh56dfx.urdf"
+      },
+      "mjcf": {
+        "path": "assets/g1_29dof_rh56dfx.xml"
+      },
+      "scene": {
+        "path": "assets/scene_41dof_rh56dfx.xml"
+      },
+      "mapping": {
+        "path": "assets/hand_config.yaml"
+      },
+      "g1_meshes": {
+        "path": "gear_sonic/data/robots/g1/meshes",
+        "shared": true
+      },
+      "native_driver": {
+        "path": "gear_sonic_deploy/inspire/native",
+        "shared": true
+      },
+      "meshes": {
+        "path": "assets/meshes"
+      },
+      "vla_initial_pose": {
+        "path": "assets/vla_initial_pose.txt"
+      }
+    },
+    "model": {
+      "factory": "./model.py:create_model",
+      "dof": 41,
+      "body_dof": 29,
+      "urdf": "urdf",
+      "mjcf": "mjcf",
+      "scene": "scene",
+      "joint_groups": {
+        "left": [
+          {
+            "urdf": "left_inspire_pinky_joint",
+            "mjcf": "left_inspire_pinky_joint",
+            "actuator": "left_inspire_pinky",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "pinky"
+          },
+          {
+            "urdf": "left_inspire_ring_joint",
+            "mjcf": "left_inspire_ring_joint",
+            "actuator": "left_inspire_ring",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "ring"
+          },
+          {
+            "urdf": "left_inspire_middle_joint",
+            "mjcf": "left_inspire_middle_joint",
+            "actuator": "left_inspire_middle",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "middle"
+          },
+          {
+            "urdf": "left_inspire_index_joint",
+            "mjcf": "left_inspire_index_joint",
+            "actuator": "left_inspire_index",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "index"
+          },
+          {
+            "urdf": "left_inspire_thumb_bend_joint",
+            "mjcf": "left_inspire_thumb_bend_joint",
+            "actuator": "left_inspire_thumb_bend",
+            "limits": [
+              0.0,
+              0.6
+            ],
+            "channel": "thumb_bend"
+          },
+          {
+            "urdf": "left_inspire_thumb_rotation_joint",
+            "mjcf": "left_inspire_thumb_rotation_joint",
+            "actuator": "left_inspire_thumb_rotation",
+            "limits": [
+              0.0,
+              1.3
+            ],
+            "channel": "thumb_rotation"
+          }
+        ],
+        "right": [
+          {
+            "urdf": "right_inspire_pinky_joint",
+            "mjcf": "right_inspire_pinky_joint",
+            "actuator": "right_inspire_pinky",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "pinky"
+          },
+          {
+            "urdf": "right_inspire_ring_joint",
+            "mjcf": "right_inspire_ring_joint",
+            "actuator": "right_inspire_ring",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "ring"
+          },
+          {
+            "urdf": "right_inspire_middle_joint",
+            "mjcf": "right_inspire_middle_joint",
+            "actuator": "right_inspire_middle",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "middle"
+          },
+          {
+            "urdf": "right_inspire_index_joint",
+            "mjcf": "right_inspire_index_joint",
+            "actuator": "right_inspire_index",
+            "limits": [
+              0.0,
+              1.7
+            ],
+            "channel": "index"
+          },
+          {
+            "urdf": "right_inspire_thumb_bend_joint",
+            "mjcf": "right_inspire_thumb_bend_joint",
+            "actuator": "right_inspire_thumb_bend",
+            "limits": [
+              0.0,
+              0.6
+            ],
+            "channel": "thumb_bend"
+          },
+          {
+            "urdf": "right_inspire_thumb_rotation_joint",
+            "mjcf": "right_inspire_thumb_rotation_joint",
+            "actuator": "right_inspire_thumb_rotation",
+            "limits": [
+              0.0,
+              1.3
+            ],
+            "channel": "thumb_rotation"
+          }
+        ]
+      },
+      "mounts": {
+        "left": {
+          "parent_frame": "left_wrist_yaw_link",
+          "frame": "left_inspire_base",
+          "xyz": [
+            0.0415,
+            0.0,
+            0.0
+          ],
+          "rpy": [
+            0.0,
+            0.0,
+            1.57079632679
+          ]
+        },
+        "right": {
+          "parent_frame": "right_wrist_yaw_link",
+          "frame": "right_inspire_base",
+          "xyz": [
+            0.0415,
+            0.0,
+            0.0
+          ],
+          "rpy": [
+            3.14159265359,
+            0.0,
+            -1.57079632679
+          ]
+        }
+      },
+      "resource_factory": "./model.py:asset_resources",
+      "physical_groups": {
+        "left": [
+          "left_inspire_thumb_rotation_joint",
+          "left_inspire_thumb_bend_joint",
+          "left_inspire_internal_thumb_intermediate_joint",
+          "left_inspire_internal_thumb_distal_joint",
+          "left_inspire_index_joint",
+          "left_inspire_internal_index_intermediate_joint",
+          "left_inspire_middle_joint",
+          "left_inspire_internal_middle_intermediate_joint",
+          "left_inspire_ring_joint",
+          "left_inspire_internal_ring_intermediate_joint",
+          "left_inspire_pinky_joint",
+          "left_inspire_internal_pinky_intermediate_joint"
+        ],
+        "right": [
+          "right_inspire_thumb_rotation_joint",
+          "right_inspire_thumb_bend_joint",
+          "right_inspire_internal_thumb_intermediate_joint",
+          "right_inspire_internal_thumb_distal_joint",
+          "right_inspire_index_joint",
+          "right_inspire_internal_index_intermediate_joint",
+          "right_inspire_middle_joint",
+          "right_inspire_internal_middle_intermediate_joint",
+          "right_inspire_ring_joint",
+          "right_inspire_internal_ring_intermediate_joint",
+          "right_inspire_pinky_joint",
+          "right_inspire_internal_pinky_intermediate_joint"
+        ]
+      },
+      "requires": [
+        "pinocchio",
+        "mujoco"
+      ]
+    },
+    "defaults": {
+      "mounts": [
+        "left",
+        "right"
+      ],
+      "options": {
+        "hand_config": "resource:mapping"
+      }
+    },
+    "options": [
+      {
+        "key": "waist_location",
+        "type": "select",
+        "options": [
+          "lower_body",
+          "upper_body",
+          "lower_and_upper_body"
+        ],
+        "default": "lower_and_upper_body"
+      },
+      {
+        "key": "high_elbow_pose",
+        "type": "boolean",
+        "default": false
+      },
+      {
+        "key": "hand_config",
+        "type": "path",
+        "required": true,
+        "backends": [
+          "real",
+          "sim_shared"
+        ],
+        "default": "resource:mapping"
+      },
+      {
+        "key": "operation_timeout_s",
+        "type": "number",
+        "min": 0.1,
+        "max": 60,
+        "default": 3
+      },
+      {
+        "key": "hardware.command_endpoint",
+        "type": "string",
+        "backends": [
+          "real",
+          "sim_shared"
+        ],
+        "default": "tcp://127.0.0.1:5561"
+      },
+      {
+        "key": "hardware.state_endpoint",
+        "type": "string",
+        "backends": [
+          "real",
+          "sim_shared"
+        ],
+        "default": "tcp://127.0.0.1:5562"
+      },
+      {
+        "key": "hardware.left_device",
+        "type": "string",
+        "backends": [
+          "real"
+        ]
+      },
+      {
+        "key": "hardware.right_device",
+        "type": "string",
+        "backends": [
+          "real"
+        ]
+      },
+      {
+        "key": "driver_path",
+        "type": "path",
+        "backends": [
+          "real"
+        ]
+      },
+      {
+        "key": "calibration",
+        "type": "path",
+        "default": "outputs/inspire_calibrations/pico_hands.json"
+      }
+    ]
+  }
+}

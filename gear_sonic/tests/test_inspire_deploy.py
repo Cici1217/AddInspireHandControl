@@ -17,20 +17,21 @@ import numpy as np
 import pytest
 import yaml
 
-from gear_sonic.utils.hand_control.inspire.config import DEFAULT_MAPPING_PATH
-from gear_sonic.utils.hand_control.inspire.contract import HandStatus
+from gear_sonic.devices.inspire.config import DEFAULT_MAPPING_PATH
+from gear_sonic.devices.inspire.contract import HandStatus
 from gear_sonic.utils.mujoco_sim.base_sim import DefaultEnv
 from gear_sonic.utils.mujoco_sim.configs import SimLoopConfig
-from gear_sonic.utils.mujoco_sim.inspire.backend import create_remote_backend
-from gear_sonic.utils.mujoco_sim.inspire.environment import configure_simulation
-from gear_sonic.utils.mujoco_sim.inspire.gateway import InspireSimGateway
+from gear_sonic.devices.inspire.simulation.backend import create_remote_backend
+from gear_sonic.devices.inspire.simulation.environment import configure_simulation
+from gear_sonic.devices.inspire.simulation.gateway import InspireSimGateway
 from gear_sonic.utils.mujoco_sim.unitree_sdk2py_bridge import UnitreeSdk2Bridge
 from gear_sonic_deploy.scripts.inspire_hand import FeedbackMonitor, preflight, run
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_sim_wrapper_inspire_initializes_dds_once(monkeypatch):
+@pytest.mark.parametrize("hand", ["inspire", "dex3"])
+def test_sim_wrapper_initializes_dds_once(monkeypatch, hand):
     from gear_sonic.scripts import run_sim_loop as entry
     from gear_sonic.utils.mujoco_sim import base_sim, simulator_factory
 
@@ -55,29 +56,12 @@ def test_sim_wrapper_inspire_initializes_dds_once(monkeypatch):
     monkeypatch.setattr(base_sim, "DefaultEnv", Scene)
     monkeypatch.setattr(base_sim, "UnitreeSdk2Bridge", lambda config: object())
     config = SimLoopConfig(interface="sim").load_wbc_yaml()
-    config.update(HAND_TYPE="inspire", USE_JOYSTICK=False)
+    config.update(HAND_TYPE=hand, USE_JOYSTICK=False)
     wrapper = entry.SimWrapper(None, "default", config)
     try:
         assert calls == [(config["DOMAIN_ID"], config["INTERFACE"])]
     finally:
         wrapper.sim.close()
-
-
-def test_sim_wrapper_keeps_default_dex3_initialization(monkeypatch):
-    from gear_sonic.scripts import run_sim_loop as entry
-
-    events = []
-    simulator = object()
-    monkeypatch.setattr(entry, "init_channel", lambda config: events.append("channel"))
-
-    def create(config, env_name, **kwargs):
-        events.append("simulator")
-        return simulator
-
-    monkeypatch.setattr(entry.SimulatorFactory, "create_simulator", create)
-    wrapper = entry.SimWrapper(None, "default", {})
-    assert wrapper.sim is simulator
-    assert events == ["channel", "simulator"]
 
 
 @pytest.mark.parametrize(
@@ -90,7 +74,7 @@ def test_sim_wrapper_keeps_default_dex3_initialization(monkeypatch):
 def test_gateway_identity_change_still_stops_deployment(mode, message):
     import msgpack
 
-    from gear_sonic.utils.hand_control.inspire.contract import InspireHandState
+    from gear_sonic.devices.inspire.contract import InspireHandState
 
     row = InspireHandState(9, 0, 0, HandStatus.DISARMED, [0] * 6, [0] * 6).to_wire_dict()
     row.update(simulation=mode == "sim", operator_session=dict(enabled=True, instance_id="new"))
@@ -234,7 +218,7 @@ def test_named_body_limits_and_shared_physics(hand_config):
             assert env.torque_limit[aid] == old_limits[old_aid]
         # A right-arm command and left index command enter the same mj_step.
         env.unitree_bridge.low_cmd.motor_cmd[22].tau = 0.3
-        from gear_sonic.utils.hand_control.inspire.contract import InspireHandCommand
+        from gear_sonic.devices.inspire.contract import InspireHandCommand
 
         gateway.controller.arm()
         now = time.monotonic_ns()
@@ -346,6 +330,8 @@ def test_shell_hand_routing_uses_no_setup_or_hardware(tmp_path, csv_logs):
             f"#!{sys.executable}\nimport json,os,sys\n"
             'with open(os.environ["TEST_CALLS"], "a") as output:\n'
             ' output.write(json.dumps([os.path.basename(sys.argv[0]), *sys.argv[1:]])+"\\n")\n'
+            'if "--native-hand" in sys.argv:\n'
+            ' print("external" if sys.argv[sys.argv.index("--device")+1] == "inspire" else "dex3")\n'
         )
         file.chmod(0o755)
     env = dict(os.environ, PATH=str(bindir) + ":" + os.environ["PATH"], TEST_CALLS=str(log))
@@ -387,7 +373,8 @@ def test_shell_hand_routing_uses_no_setup_or_hardware(tmp_path, csv_logs):
                 continue
             assert len(body_calls) == 1
             actual = body_calls[0]
-            assert actual[actual.index("--hand") + 1] == (hand or "dex3")
+            assert actual[actual.index("--device") + 1] == (hand or "dex3")
+            assert actual[actual.index("--hand") + 1] == ('external' if hand == 'inspire' else 'dex3')
             assert checkpoint + "_decoder.onnx" in actual
             assert actual[actual.index("--encoder-file") + 1] == checkpoint + "_encoder.onnx"
             assert actual[actual.index("--input-type") + 1] == "keyboard"
@@ -415,6 +402,86 @@ def test_sim_launcher_leaves_existing_server_alive(hand_config, live_sim):
     hand = create_remote_backend(hand_config)
     hand.connect()
     hand.close()
+
+
+@pytest.mark.parametrize('module', ['gear_sonic.devices.inspire.driver.supervisor',
+                                   'gear_sonic_deploy.scripts.inspire_hand'])
+def test_hand_only_monitors_sim_without_body_and_keeps_external_gateway(hand_config, live_sim, tmp_path, module):
+    log = tmp_path / 'hand-only.log'
+    with log.open('w') as output:
+        process = subprocess.Popen(
+            [sys.executable, '-u', '-m', module, '--mode', 'sim', '--hand-only',
+             '--config', str(hand_config)], stdout=output, stderr=subprocess.STDOUT)
+        try:
+            deadline = time.monotonic() + 8
+            while 'sim ready' not in log.read_text() and time.monotonic() < deadline:
+                assert process.poll() is None, log.read_text()
+                time.sleep(.02)
+            assert 'sim ready' in log.read_text(), log.read_text()
+            # An independent client can acquire the hand while the monitor runs.
+            hand = create_remote_backend(hand_config)
+            try:
+                hand.connect()
+                state = hand.read_state()
+                # MuJoCo soft limits can drift a few microradians below zero.
+                # Project only this simulated seed; keep real command limits strict.
+                hand.set_target(np.clip(state.left_position, 0, [1.7]*4+[.6, 1.3]),
+                                np.clip(state.right_position, 0, [1.7]*4+[.6, 1.3]))
+            finally:
+                hand.close()
+            process.send_signal(signal.SIGTERM)
+            assert process.wait(8) == 143, log.read_text()
+            assert not live_sim['gateway'].meta['active']
+            hand = create_remote_backend(hand_config)
+            hand.connect(); hand.close()
+        finally:
+            if process.poll() is None:
+                process.kill(); process.wait()
+
+
+def test_hand_only_owns_native_gateway_without_body_and_restores_serial(hand_config, tmp_path):
+    from gear_sonic.tests.test_inspire_serial_e2e import SerialEmulator
+    binary = os.environ.get('INSPIRE_TEST_GATEWAY')
+    if not binary:
+        pytest.skip('set INSPIRE_TEST_GATEWAY for standalone PTY lifecycle check')
+    left, right = SerialEmulator(2), SerialEmulator(3)
+    process = None
+    try:
+        cfg = yaml.safe_load(hand_config.read_text())
+        cfg['hardware'].update(left_device=left.path, right_device=right.path, left_id=2,
+                               right_id=3, lock_path=str(tmp_path/'writer.lock'), operation_timeout_s=3)
+        hand_config.write_text(yaml.safe_dump(cfg, sort_keys=False))
+        log = tmp_path/'native-hand-only.log'
+        with log.open('w') as output:
+            process = subprocess.Popen(
+                [sys.executable, '-u', '-m', 'gear_sonic.devices.inspire.driver.supervisor',
+                 '--mode', 'real', '--hand-only', '--driver', binary, '--config', str(hand_config)],
+                stdout=output, stderr=subprocess.STDOUT)
+            deadline = time.monotonic()+8
+            while 'real ready' not in log.read_text() and time.monotonic()<deadline:
+                assert process.poll() is None, log.read_text()
+                time.sleep(.02)
+            assert 'real ready' in log.read_text(), log.read_text()
+            assert not left.writes and not right.writes
+            process.send_signal(signal.SIGTERM)
+            assert process.wait(8) == 143, log.read_text()
+            assert left.speed == right.speed == [400]*6
+    finally:
+        if process is not None and process.poll() is None:
+            process.kill(); process.wait()
+        left.close(); right.close()
+
+
+def test_registered_body_entry_uses_live_sim_without_starting_hardware(hand_config, live_sim):
+    from gear_sonic.scripts.run_device_body import build_parser, run as run_registered
+    from gear_sonic.utils.hand_control.management import active_leases
+    before = {row['id'] for row in active_leases()}
+    args = build_parser().parse_args(['--device', 'inspire', '--mode', 'sim', '--config', str(hand_config),
+                                     '--', sys.executable, '-c', 'raise SystemExit(7)'])
+    assert run_registered(args) == 7
+    assert {row['id'] for row in active_leases()} == before
+    hand = create_remote_backend(hand_config)
+    hand.connect(); hand.close()  # The shared simulation was not owned or stopped by the launcher.
 
 
 def test_sim_launcher_rolls_back_failed_body(hand_config, live_sim):
@@ -525,7 +592,7 @@ def test_real_driver_early_exit_does_not_start_body(hand_config, tmp_path):
 def test_gateway_ownership_shape_and_reset(hand_config):
     import uuid
 
-    from gear_sonic.utils.hand_control.inspire.contract import InspireHandCommand
+    from gear_sonic.devices.inspire.contract import InspireHandCommand
 
     env = make_env(hand_config)
     gateway = InspireSimGateway(env.mj_model, env.mj_data, hand_config)
@@ -565,7 +632,7 @@ def test_gateway_ownership_shape_and_reset(hand_config):
 
 
 def test_real_client_rejects_sim_gateway(hand_config, live_sim):
-    from gear_sonic.utils.hand_control.inspire.client import InspireRealBackend
+    from gear_sonic.devices.inspire.driver.client import InspireRealBackend
 
     hand = InspireRealBackend(hand_config)
     with pytest.raises(RuntimeError, match="mode differs"):
@@ -644,7 +711,7 @@ def test_full_sim_entry_point_with_body_dds(hand_config, tmp_path):
 
 
 def test_launcher_rejects_unowned_gateway(hand_config, live_sim):
-    from gear_sonic.utils.hand_control.inspire.config import hardware_settings
+    from gear_sonic.devices.inspire.config import hardware_settings
 
     monitor = FeedbackMonitor(
         hardware_settings(hand_config), "sim", expected_instance="not-this-process"
@@ -683,8 +750,8 @@ def test_remote_preflight_needs_no_local_serial_or_binary(hand_config):
 
 def test_remote_launcher_reuses_external_serial_bridge(hand_config, tmp_path):
     from gear_sonic.tests.test_inspire_serial_e2e import SerialEmulator
-    from gear_sonic.utils.hand_control.inspire.client import create_backend
-    from gear_sonic.utils.hand_control.inspire.config import driver_command
+    from gear_sonic.devices.inspire.driver.client import create_backend
+    from gear_sonic.devices.inspire.config import driver_command
 
     binary = os.environ.get("INSPIRE_TEST_GATEWAY")
     if not binary:

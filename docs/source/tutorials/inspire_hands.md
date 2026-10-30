@@ -5,13 +5,18 @@ existing deployment entry points. SONIC controls the G1 body; a separate stream
 controls six finger channels per hand. Omitting `--hand` preserves the original
 Dex3 deployment.
 
-VLA, PICO optical retargeting and dataset recording/replay are outside this
-Inspire integration. The upstream inference and PICO entry points are unchanged.
+只控制手、不运行身体时，从 [Python 手部接口与示例](../../../gear_sonic/devices/inspire/README.md)
+和 [独立网关部署](../../../gear_sonic_deploy/inspire/README.md) 开始。
+Python 实现集中在 `gear_sonic/devices/inspire/`，C++ 网关集中在
+`gear_sonic_deploy/inspire/native/`；旧命令及模型文件路径保留兼容入口，内部 Python 导入直接使用上述目录。
+仅手部监视／启动可用 `python -m gear_sonic.devices.inspire.driver.supervisor --hand-only`，
+配合 `--mode` 和 `--config` 使用。原来的身体联合部署方式保持不变。
 
-For the file layout and instructions for adding another hand, see
-[Adding a hand](../../../gear_sonic/utils/hand_control/README.md).
-Each implementation directory contains a short overview; this guide owns the
-execution instructions.
+PICO optical teleoperation and independent LeRobot recording are included below.
+Dataset replay and VLA are available through the [console](console.md) and
+[Inspire VLA guide](vla_inspire.md). Inspire is the supported custom hand;
+the original Dex3 body simulation and motion replay remain available.
+The project no longer installs or manages additional device plugins.
 
 Use the existing `gear_sonic_deploy/deploy.sh` for both hands. Model selection,
 network selection, build, deployment confirmation and body keyboard controls
@@ -19,6 +24,8 @@ use the same path. Leave out `--hand` for Dex3, or add `--hand inspire` for Insp
 The launcher previews the exact command it will execute, including the Inspire
 communication supervisor when selected; no separate Python deployment command
 is needed.
+
+本地网页入口见 [网页控制台](console.md)：先选功能，再选仿真/真机，配置路径并预览实际命令。
 
 ## Setup
 
@@ -112,7 +119,7 @@ On the computer, package the existing driver source and copy it to a fresh
 robot directory. Replace `USER@ROBOT` with your SSH destination:
 
 ```bash
-python gear_sonic_deploy/src/inspire_hand_bridge/bridge/package.py /tmp/inspire-bridge.tar.gz
+python gear_sonic_deploy/inspire/native/bridge/package.py /tmp/inspire-bridge.tar.gz
 ssh USER@ROBOT 'mkdir -p ~/inspire_hand_bridge'
 scp /tmp/inspire-bridge.tar.gz USER@ROBOT:~/inspire_hand_bridge/
 ```
@@ -174,19 +181,46 @@ the remote bridge. `--hand-remote` cannot be used with sim, Dex3 or `--hand-driv
 
 If body control and hand serial devices are on the same machine, omit
 `--hand-remote`, configure the local device paths in YAML, and build the driver
-with `cmake -S gear_sonic_deploy/src/inspire_hand_bridge -B build/inspire-native`
+with `cmake -S gear_sonic_deploy/inspire/native -B build/inspire-native`
 and `cmake --build build/inspire-native`. The launcher then owns that driver.
+
+### Body control on G1
+
+For the prepared G1 deployment, the body controller runs in
+`~/inspire_hand_bridge/sonic/` and the serial bridge in
+`~/inspire_hand_bridge/hand_bridge/`. The computer runs PICO and forwards body
+and hand streams over SSH; body DDS stays on G1's internal interface.
+
+Keep the bridge endpoints at `127.0.0.1:5561/5562` on both machines. Run these
+commands in separate computer terminals:
+
+```bash
+# Bridge plus body/hand forwarding.
+ssh -t -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
+  -R 127.0.0.1:5556:127.0.0.1:5556 \
+  -L 127.0.0.1:5557:127.0.0.1:5557 \
+  -L 127.0.0.1:5561:127.0.0.1:5561 \
+  -L 127.0.0.1:5562:127.0.0.1:5562 \
+  USER@ROBOT 'cd ~/inspire_hand_bridge/hand_bridge && ./run.sh'
+
+# Body controller for PICO; add --keyboard for independent manual control.
+ssh -t USER@ROBOT 'cd ~/inspire_hand_bridge/sonic && ./run_body.sh'
+```
+
+`run_body.sh` uses the existing G1 `low_latency` models and the internal DDS
+interface. `--check` validates its paths without starting control. It launches
+the native body controller directly; in keyboard mode a hand disconnect does
+not automatically stop the body. Press `O` in the body terminal to stop it.
 
 ## Hand commands and stopping
 
-The Inspire adapters share [HandBackend](../../../gear_sonic/utils/hand_control/interface.py):
-`connect()`, `set_target(left, right)`, `read_state()`, `stop()` and `close()`.
-This API is optional for other hand integrations; see the
-[Dex3/Inspire integration examples](../../../gear_sonic/utils/hand_control/README.md).
-Use `gear_sonic.utils.hand_control.inspire.client.create_backend(config_path)`
-for hardware or
-`gear_sonic.utils.mujoco_sim.inspire.backend.create_remote_backend(config_path)`
-for the shared simulation.
+Upper-level entry points now use the registered `EndEffector` interface:
+`connect()`, `get_state()`, `send_action()`, `stop()`, `reset()` and `close()`.
+`InspireAdapter` preserves the existing gateway protocol and simulation controller;
+the old `HandBackend` remains an internal driver boundary. See the centralized
+[device integration guide](../../../gear_sonic/utils/hand_control/README.md)
+for registration, deployment and the MuJoCo parallel-gripper example.
 
 Each target has six angles in radians, ordered
 `pinky, ring, middle, index, thumb_bend, thumb_rotation`. Bounds are
@@ -204,7 +238,7 @@ To check every finger while the body remains under SONIC control, run this
 explicit sequence from another computer terminal after the idle planner is ready:
 
 ```bash
-# Hardware; the bridge, tunnel and body controller must already be running.
+# Hardware; the bridge and body controller must already be running.
 python -m gear_sonic.scripts.inspire_hand_example --backend real \
   --config /path/to/hand.yaml --sequence
 
@@ -284,3 +318,100 @@ locomotion or the full sim-to-real motion envelope.
 
 Model provenance is in [ASSETS.md](../../../gear_sonic/data/robots/g1/inspire/ASSETS.md);
 retained credits and licenses are in [third-party notices](../../../legal/NOTICE-inspire-hands.md).
+
+## PICO optical teleoperation
+
+Inspire 使用 `run_pico_teleop.py`，不需要 ABXY、RESET 或手动 ARM。
+头显先连接电脑的 XRoboToolkit PC Service，并开启身体和光学手跟踪。
+首次安装环境：
+
+```bash
+bash install_scripts/install_pico.sh
+```
+
+仿真在三个终端运行。每个终端从仓库根目录开始。
+
+```bash
+# 终端一：仿真和相机图像，后面录制也用这一进程。
+source .venv_sim/bin/activate
+python gear_sonic/scripts/run_sim_loop.py --interface sim --hand inspire \
+  --enable-image-publish --enable-offscreen --camera-port 5555
+```
+
+```bash
+# 终端二：沿用原部署入口。
+source .venv_sim/bin/activate
+cd gear_sonic_deploy
+./deploy.sh sim --hand inspire --input-type zmq_manager --output-type zmq
+```
+
+```bash
+# 终端三：PICO 身体和双手遥操。
+source .venv_teleop/bin/activate
+python -m gear_sonic.scripts.run_pico_teleop --sim
+```
+
+第一次没有标定文件时，程序直接提示采集四种手势，保存后自动复用。
+等身体部署显示 `Init Done`，站好身体标定姿态，在 PICO 终端按 Enter。
+程序自动启动身体并切到 PICO 流；确认控制已启动后，在仿真窗口按 `9` 释放支撑。
+这条流程不使用 keyboard 模式的 `] → Enter`，也不使用旧 manager 的 ABXY。
+
+真机按上面的“Body control on G1”启动 SSH 转发、手桥接和身体程序。
+电脑的 PICO 命令去掉 `--sim`，加 `--hand-config /path/to/hand.yaml`；
+手配置保持 `127.0.0.1:5561/5562`。不要同时运行逐指示例。
+
+PICO 终端 Ctrl+C 停止遥操：发送身体 Stop，并检查手部 DISARM。
+手目标独立每 20ms 提交，保留限速和碰撞约束。沿用旧 PICO 的光学丢失处理：手被遮挡时保持上一目标，重新识别后继续跟随。网关故障仍停止手部发送并提示，身体数据继续发送，不自动清故障。
+手反馈短暂过期时显示 `PICO hand feedback paused`，暂停目标发送并持续接收反馈；同一网关、同一控制会话恢复健康反馈后自动继续，显示 `control resumed`。暂停期间不累计目标位移，恢复从最后成功提交的位置限速过渡；FAULT、网关重启或控制权丢失仍停止手部。普通手指测试保持原来的报错停止行为。
+身体只处理新帧；短暂停更等待恢复，连续 5 秒没有新帧才停止遥操。退出时保留最初的错误，手部 DISARM 失败单独报告。
+断网时无法保证远端停止送达，硬件 watchdog 配置仍沿原实现。
+需要重新标定时才单独运行 `python -m gear_sonic.scripts.calibrate_pico_hands`。
+
+## Independent LeRobot recording
+
+遥操保持运行，录制另外启动。首次安装录制环境：
+
+```bash
+bash install_scripts/install_data_collection.sh
+```
+
+```bash
+source .venv_data_collection/bin/activate
+python -m gear_sonic.scripts.record_pico_lerobot \
+  --sim --output outputs/datasets/sim/pico_demo_001 --task-prompt "拿起物体"
+```
+
+命令运行后直接采集，不再按 Enter。默认录制 600 个有效样本，名义 12 秒；
+用 `--frames` 调整长度，每次换一个新输出目录。Ctrl+C 只取消录制，遥操继续运行。
+真机去掉 `--sim`，加同一手配置和 `--camera-host` 指向机器人相机 IP。
+相机须发布 640×480 的 `ego_view`，仿真已由终端一发布。
+
+输出沿用 LeRobot 的 Parquet、MP4 和 metadata。41维实测状态、六路手实测、
+六路提交目标和原始手部意图分别保存，含64维 SONIC token及来源时间。
+成功检查后发布目录，失败留 INCOMPLETE，不覆盖已有数据。训练统计不在录制里运行。
+
+新录制还会自动保存一份 SONIC 原生身体动作参考，原有 Parquet、视频、SMPL、
+token 和双手数据格式保持不变：
+
+```text
+数据集目录/
+└── sonic_reference/
+    ├── episode_000000/
+    │   ├── joint_pos.csv    # 29 个实测关节角，弧度，IsaacLab 顺序
+    │   ├── joint_vel.csv    # 29 个实测关节速度，rad/s，同一顺序
+    │   ├── body_quat.csv    # 实测身体根节点朝向，wxyz
+    │   ├── body_pos.csv     # 零占位；没有记录世界位置
+    │   ├── metadata.txt    # 根节点索引 [0]
+    │   └── info.txt        # 数据来源和格式说明
+    └── episode_000001/     # 同一批次下一条录制
+```
+
+在“05 SONIC 动作回放”选择同一个数据集和 Episode，再选“实测关节角参考”，
+程序自动读取对应文件，使用 G1 编码模式，并同步播放原有双手目标。
+当前 release/low_latency 的该模式不使用根节点 XYZ。
+这份参考按实际采样时间整理为 50 Hz，丢帧间隔会插值，因此行数可能与训练数据不同。
+它只包含身体动作，不包含场景或双手控制，不表示恢复机器人在世界中的行走轨迹。
+原有录制不会被回写，默认仍使用 SMPL 人体参考。
+
+当前已做离线控制和实际文件导出验证；真实头显控制完整仿真及实体 Wi-Fi 仍待现场测试。
+50Hz 是目标提交和名义采样，不能等同于实体反馈频率。

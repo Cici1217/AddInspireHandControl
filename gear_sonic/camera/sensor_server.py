@@ -106,30 +106,58 @@ class PoseMessageSchema:
 class ImageMessageSchema:
     """Standardized message schema for camera images.
 
-    Handles two encodings on the wire:
+    Handles RGB and lossless depth encodings on the wire:
 
     * **str** – legacy base64-encoded JPEG.
     * **bytes** – raw JPEG from on-device MJPEG encoder (e.g. OAK).
+    * **str + encodings[key]=png16** – base64 uint16 depth PNG.
+      Optional metadata carries calibration and native device timestamps.
     """
 
     timestamps: dict[str, float]
     images: dict[str, np.ndarray]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def serialize(self) -> dict[str, Any]:
         serialized_msg: dict[str, Any] = {"timestamps": self.timestamps, "images": {}}
+        encodings = {}
         for key, image in self.images.items():
-            if isinstance(image, bytes | bytearray):
+            if key.endswith("_depth"):
+                if not isinstance(image, np.ndarray) or image.dtype != np.uint16 or image.ndim != 2:
+                    raise ValueError(f"{key} must be a 2D uint16 depth array")
+                serialized_msg["images"][key] = ImageUtils.encode_depth_image(image)
+                encodings[key] = "png16"
+            elif isinstance(image, bytes | bytearray):
                 serialized_msg["images"][key] = image
             else:
                 serialized_msg["images"][key] = ImageUtils.encode_image(image)
+        if encodings:
+            serialized_msg["encodings"] = encodings
+        if self.metadata:
+            serialized_msg["metadata"] = self.metadata
         return serialized_msg
 
     @staticmethod
-    def deserialize(data: dict[str, Any]) -> "ImageMessageSchema":
+    def deserialize(data: dict[str, Any], *, include_depth: bool = True) -> "ImageMessageSchema":
         timestamps = data.get("timestamps", {})
+        if not include_depth:
+            timestamps = {key: value for key, value in timestamps.items() if not key.endswith("_depth")}
         images = {}
         for key, value in data.get("images", {}).items():
-            if isinstance(value, bytes | bytearray):
+            # RGB-only consumers must not decode or validate unused legacy depth.
+            if not include_depth and key.endswith("_depth"):
+                continue
+            encoding = data.get("encodings", {}).get(key)
+            if encoding == "png16":
+                depth = ImageUtils.decode_depth_image(value)
+                if depth is None or depth.dtype != np.uint16 or depth.ndim != 2:
+                    raise ValueError(f"invalid uint16 depth payload for {key}")
+                images[key] = depth
+            elif encoding is not None:
+                raise ValueError(f"unsupported image encoding: {encoding}")
+            elif key.endswith("_depth") and isinstance(value, (str, bytes, bytearray)):
+                raise ValueError(f"{key} lacks lossless depth encoding; update the camera server")
+            elif isinstance(value, bytes | bytearray):
                 mat = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
                 images[key] = mat[..., ::-1]  # BGR -> RGB
             elif isinstance(value, str):
@@ -140,10 +168,13 @@ class ImageMessageSchema:
                 images[key] = m.decode(value)
             else:
                 images[key] = value
-        return ImageMessageSchema(timestamps=timestamps, images=images)
+        return ImageMessageSchema(timestamps=timestamps, images=images, metadata=data.get("metadata", {}))
 
     def asdict(self) -> dict[str, Any]:
-        return {"timestamps": self.timestamps, "images": self.images}
+        result = {"timestamps": self.timestamps, "images": self.images}
+        if self.metadata:
+            result["metadata"] = self.metadata
+        return result
 
 
 # =============================================================================
@@ -227,7 +258,10 @@ class ImageUtils:
 
     @staticmethod
     def encode_depth_image(image: np.ndarray) -> str:
-        depth_compressed = cv2.imencode(".png", image)[1].tobytes()
+        ok, buffer = cv2.imencode(".png", image, [cv2.IMWRITE_PNG_COMPRESSION, 1])
+        if not ok:
+            raise ValueError("could not encode depth PNG")
+        depth_compressed = buffer.tobytes()
         return base64.b64encode(depth_compressed).decode("utf-8")
 
     @staticmethod

@@ -1,9 +1,8 @@
-"""Shared Inspire adapter API, optionally reusable by other hand integrations.
+"""Registered end-effector contracts; imports open no devices or SDKs."""
 
-See README.md for integration guidance. This package does not register hands;
-the existing Dex3 deployment uses its original implementation.
-"""
+from .interface import (ActionReceipt, Channel, DeviceDescription, EffectorAction,
+                        EffectorError, EffectorState, EndEffector,
+                        HandBackend, HandDescription, HandState)
 
-from .interface import HandBackend, HandDescription, HandState
-
-__all__ = ["HandBackend", "HandDescription", "HandState"]
+__all__ = ["EndEffector", "DeviceDescription", "Channel", "EffectorAction", "EffectorState",
+           "ActionReceipt", "EffectorError", "HandBackend", "HandDescription", "HandState"]

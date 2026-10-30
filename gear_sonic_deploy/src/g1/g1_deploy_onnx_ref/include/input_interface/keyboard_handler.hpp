@@ -82,6 +82,7 @@ class SimpleKeyboard : public InputInterface {
     // ------------------------------------------------------------------
     // Planner-mode state
     // ------------------------------------------------------------------
+    bool start_in_planner = false; // Optional preparation pose: first ] enters balanced planner mode.
     bool use_planner = false;      ///< True while planner mode is active.
 
     /// Index into the predefined motion-set table
@@ -434,7 +435,10 @@ class SimpleKeyboard : public InputInterface {
 
       if (this->report_temperature) { report_temperature = true; }
 
-      if (this->start_control) { operator_state.start = true; }
+      if (this->start_control) {
+        if (start_in_planner) { use_planner = true; start_in_planner = false; }
+        operator_state.start = true;
+      }
 
       // Handle delta heading controls
       if (this->delta_left) {

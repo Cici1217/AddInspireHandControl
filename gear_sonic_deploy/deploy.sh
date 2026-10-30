@@ -207,12 +207,15 @@ show_usage() {
     echo "  --cp, --checkpoint PATH Set the checkpoint path (default: policy/release/model)"
     echo "  --obs-config PATH       Set the observation config file (default: policy/release/observation_config.yaml)"
     echo "  --planner PATH          Set the planner model path (default: planner/target_vel/V2/planner_sonic.onnx)"
+    echo "  --sim-initial-pose PATH  Optional simulation INIT body29 reference"
     echo "  --motion-data PATH      Set the motion data path (default: reference/example/)"
     echo "  --input-type TYPE       Set the input type (default: manager)"
     echo "  --output-type TYPE      Set the output type (default: all)"
     echo "  --enable-csv-logs       Enable existing body CSV logs (default: off)"
     echo "  --logs-dir PATH         Body log output directory (default: timestamped logs directory)"
-    echo "  --hand dex3|inspire     Select hand backend (default: dex3)"
+    echo "  --hand DEVICE          Select a registered device (default: dex3)"
+    echo "  --device-registry DIR  Local device registry"
+    echo "  --effector-deployment FILE  Device deployment JSON"
     echo "  --hand-remote          Connect to an existing Inspire bridge (real only)"
     echo "  --hand-config PATH     Inspire configuration (default: packaged hand_config.yaml)"
     echo "  --hand-driver PATH     Compiled Inspire gateway (real only)"
@@ -242,6 +245,8 @@ show_usage() {
 
 # Default interface mode
 INTERFACE_MODE="real"
+SIM_INITIAL_POSE=""
+READY_POSE=""
 
 # Default configuration values (can be overridden by command line)
 CHECKPOINT_DEFAULT="policy/release/model"
@@ -261,12 +266,14 @@ INPUT_TYPE="$INPUT_TYPE_DEFAULT"
 OUTPUT_TYPE="$OUTPUT_TYPE_DEFAULT"
 ZMQ_HOST="$ZMQ_HOST_DEFAULT"
 HAND_TYPE="dex3"
-HAND_CONFIG="$SCRIPT_DIR/../gear_sonic/data/robots/g1/inspire/hand_config.yaml"
+HAND_CONFIG=""
 HAND_DRIVER="$SCRIPT_DIR/../build/inspire-native/inspire_direct_serial_hand_gateway"
 HAND_PYTHON="python3"
 HAND_OPTIONS_SET=false
 HAND_REMOTE=false
 HAND_DRIVER_SET=false
+DEVICE_REGISTRY="$SCRIPT_DIR/../gear_sonic/devices"
+EFFECTOR_DEPLOYMENT=""
 MOTOR_KP_SCALES=()
 MOTOR_KD_SCALES=()
 BODY_LOG_ARGS=()
@@ -294,7 +301,7 @@ while [[ $# -gt 0 ]]; do
             BODY_LOG_ARGS+=(--logs-dir "$2")
             shift 2
             ;;
-        --hand|--hand-config|--hand-driver|--hand-python)
+        --hand|--hand-config|--hand-driver|--hand-python|--device-registry|--effector-deployment)
             if [[ $# -lt 2 || -z "$2" || "$2" == --* ]]; then
                 echo "Error: $1 requires a value" >&2
                 exit 1
@@ -304,6 +311,8 @@ while [[ $# -gt 0 ]]; do
                 --hand-config) HAND_CONFIG="$2"; HAND_OPTIONS_SET=true ;;
                 --hand-driver) HAND_DRIVER="$2"; HAND_OPTIONS_SET=true; HAND_DRIVER_SET=true ;;
                 --hand-python) HAND_PYTHON="$2"; HAND_OPTIONS_SET=true ;;
+                --device-registry) DEVICE_REGISTRY="$2" ;;
+                --effector-deployment) EFFECTOR_DEPLOYMENT="$2" ;;
             esac
             shift 2
             ;;
@@ -315,6 +324,12 @@ while [[ $# -gt 0 ]]; do
             CHECKPOINT="$2"
             shift 2
             ;;
+        --ready-pose)
+            [[ $# -ge 2 && -n "$2" ]] || { echo "--ready-pose requires 29 quoted angles" >&2; exit 1; }
+            READY_POSE="$2"; shift 2 ;;
+        --sim-initial-pose)
+            [[ $# -ge 2 ]] || { echo "--sim-initial-pose requires a path" >&2; exit 1; }
+            SIM_INITIAL_POSE="$2"; shift 2 ;;
         --obs-config)
             if [[ -z "$2" ]]; then
                 echo -e "${RED}Error: --obs-config requires a path argument${NC}" >&2
@@ -395,15 +410,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-case "$HAND_TYPE" in
-    dex3|inspire) ;;
-    *) echo "Error: --hand must be dex3 or inspire" >&2; exit 1 ;;
-esac
-if [[ "$HAND_TYPE" == dex3 && "$HAND_OPTIONS_SET" == true ]]; then
-    echo "Error: --hand-remote/--hand-config/--hand-driver/--hand-python require --hand inspire" >&2
-    exit 1
-fi
-
 # ============================================================================
 # Display Header
 # ============================================================================
@@ -427,18 +433,15 @@ if [[ "$HAND_REMOTE" == true && ( "$ENV_TYPE" != real || "$HAND_DRIVER_SET" == t
     exit 1
 fi
 
-HAND_LAUNCH=()
-if [[ "$HAND_TYPE" == "inspire" ]]; then
-    export PYTHONPATH="$SCRIPT_DIR/..${PYTHONPATH:+:$PYTHONPATH}"
-    HAND_LAUNCH=("$HAND_PYTHON" -m gear_sonic_deploy.scripts.inspire_hand
-        --mode "$ENV_TYPE" --config "$HAND_CONFIG")
-    if [[ "$HAND_REMOTE" == true ]]; then
-        HAND_LAUNCH+=(--remote)
-    else
-        HAND_LAUNCH+=(--driver "$HAND_DRIVER")
-    fi
-    "${HAND_LAUNCH[@]}" --check
-fi
+export PYTHONPATH="$SCRIPT_DIR/..${PYTHONPATH:+:$PYTHONPATH}"
+HAND_LAUNCH=("$HAND_PYTHON" -m gear_sonic.scripts.run_device_body
+    --device "$HAND_TYPE" --mode "$ENV_TYPE" --registry-dir "$DEVICE_REGISTRY")
+if [[ -n "$EFFECTOR_DEPLOYMENT" ]]; then HAND_LAUNCH+=(--deployment "$EFFECTOR_DEPLOYMENT"); fi
+if [[ -n "$HAND_CONFIG" ]]; then HAND_LAUNCH+=(--config "$HAND_CONFIG"); fi
+if [[ "$HAND_REMOTE" == true ]]; then HAND_LAUNCH+=(--remote); fi
+if [[ "$HAND_DRIVER_SET" == true ]]; then HAND_LAUNCH+=(--driver "$HAND_DRIVER"); fi
+NATIVE_HAND=$("${HAND_LAUNCH[@]}" --native-hand)
+"${HAND_LAUNCH[@]}" --check
 
 echo -e "Resolved interface: ${GREEN}$TARGET${NC}"
 echo -e "Environment type:   ${GREEN}$ENV_TYPE${NC}"
@@ -474,7 +477,13 @@ CHECKPOINT_ENCODER="${CHECKPOINT}_encoder.onnx"
 # ZMQ_HOST is already set from argument parsing above
 
 # Additional flags for simulation mode
-EXTRA_ARGS=("--hand" "$HAND_TYPE")
+EXTRA_ARGS=("--hand" "$NATIVE_HAND")
+if [[ -n "$READY_POSE" ]]; then EXTRA_ARGS+=(--ready-pose "$READY_POSE"); fi
+if [[ -n "$SIM_INITIAL_POSE" ]]; then
+    [[ "$ENV_TYPE" == "sim" ]] || { echo "--sim-initial-pose requires simulation" >&2; exit 1; }
+    EXTRA_ARGS+=(--sim-initial-pose "$SIM_INITIAL_POSE")
+fi
+
 if [[ "$ENV_TYPE" == "sim" ]]; then
     EXTRA_ARGS+=("--disable-crc-check")
     echo -e "${YELLOW}📋 Simulation mode: CRC check will be disabled${NC}"
@@ -609,12 +618,8 @@ BODY_ARGS=("$TARGET" "$CHECKPOINT_DECODER" "$MOTION_DATA"
     --zmq-host "$ZMQ_HOST"
     "${BODY_LOG_ARGS[@]}"
     "${EXTRA_ARGS[@]}")
-DEPLOY_COMMAND=(just run g1_deploy_onnx_ref "${BODY_ARGS[@]}")
-if [[ "$HAND_TYPE" == "inspire" ]]; then
-    # The existing supervisor owns the body directly and cleans up local hand IO.
-    DEPLOY_COMMAND=("${HAND_LAUNCH[@]}" --
-        "$SCRIPT_DIR/target/release/g1_deploy_onnx_ref" "${BODY_ARGS[@]}")
-fi
+DEPLOY_COMMAND=("${HAND_LAUNCH[@]}" --
+    "$SCRIPT_DIR/target/release/g1_deploy_onnx_ref" "${BODY_ARGS[@]}")
 
 echo -e "${BLUE}[Step 4/4]${NC} Ready to deploy!"
 echo ""

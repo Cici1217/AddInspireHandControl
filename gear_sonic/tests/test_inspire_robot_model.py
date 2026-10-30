@@ -9,13 +9,15 @@ import numpy as np
 import pytest
 import yaml
 
-from gear_sonic.data.robot_model.instantiation import instantiate_g1_rh56dfx_robot_model
-from gear_sonic.data.robot_model.instantiation.g1_inspire_assets import load_asset_paths
+from gear_sonic.data.robot_model.instantiation.g1_inspire import (
+    instantiate_g1_rh56dfx_robot_model,
+    load_asset_paths,
+)
 from gear_sonic.data.robot_model.supplemental_info.g1.g1_supplemental_info import (
     G1SupplementalInfo,
 )
-from gear_sonic.utils.hand_control.inspire.config import DEFAULT_MAPPING_PATH, load_mapping
-from gear_sonic.utils.hand_control.inspire.contract import JOINT_ORDER, ContractError
+from gear_sonic.devices.inspire.config import DEFAULT_MAPPING_PATH, load_mapping
+from gear_sonic.devices.inspire.contract import JOINT_ORDER, ContractError
 
 
 @pytest.mark.parametrize("through_sim_entry", [False, True])
@@ -102,9 +104,7 @@ def test_wrist_to_palm_transform_matches_mujoco(pose):
         np.testing.assert_allclose(pin_relative.rotation, mj_rotation, atol=1e-4)
 
 
-@pytest.mark.parametrize(
-    "defect", ["order", "duplicate_joint", "nonfinite", "limit", "domain_index"]
-)
+@pytest.mark.parametrize("defect", ["order", "duplicate_joint", "nonfinite", "limit", "domain_index"])
 def test_invalid_mapping_is_rejected(tmp_path, defect):
     document = yaml.safe_load(DEFAULT_MAPPING_PATH.read_text())
     left = document["joints"]["left"]

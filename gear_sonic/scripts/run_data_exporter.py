@@ -40,6 +40,7 @@ from gear_sonic.data.features_sonic_vla import (
 )
 from gear_sonic.camera.composed_camera import ComposedCameraClientSensor
 from gear_sonic.utils.data_collection.episode_state import EpisodeState
+from gear_sonic.utils.data_collection.paths import capture_directory
 from gear_sonic.utils.data_collection.keyboard_subscriber import ZMQKeyboardSubscriber
 from gear_sonic.utils.data_collection.telemetry import Telemetry
 from gear_sonic.utils.data_collection.text_to_speech import TextToSpeech
@@ -65,8 +66,11 @@ class SonicDataExporterConfig:
     task_prompt: str = "demo"
     """Language task prompt."""
 
-    root_output_dir: str = "outputs"
-    """Root output directory."""
+    root_output_dir: str | None = None
+    """Explicit parent directory; default: project outputs/datasets/sim or real."""
+
+    sim: bool = False
+    """Recording source is simulation; independent of where it is later replayed."""
 
     data_collection_frequency: int = 50
     """Data collection frequency (Hz)."""
@@ -931,12 +935,13 @@ def main(config: SonicDataExporterConfig):
     )
 
     data_exporter = Gr00tDataExporter.create(
-        save_root=f"{config.root_output_dir}/{config.dataset_name}",
+        save_root=f"{config.root_output_dir or capture_directory(config.sim)}/{config.dataset_name}",
         fps=config.data_collection_frequency,
         features=dataset_features,
         modality_config=modality_config,
         task=config.task_prompt,
-        script_config={**robot_config, "record_wrist_cameras": config.record_wrist_cameras},
+        script_config={**robot_config, "record_wrist_cameras": config.record_wrist_cameras,
+                       "capture_source": "sim" if config.sim else "real"},
     )
 
     data_collector = GrootDataCollector(

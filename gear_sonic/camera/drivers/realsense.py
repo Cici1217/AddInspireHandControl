@@ -46,6 +46,7 @@ class RealSenseSensor(Sensor, SensorServer):
         config: RealSenseConfig = RealSenseConfig(),
         id: int = 0,
         mount_position: str = CameraMountPosition.EGO_VIEW.value,
+        device_id: str | None = None,
     ):
         devices = rs.context().query_devices()
         if len(devices) == 0:
@@ -59,7 +60,15 @@ class RealSenseSensor(Sensor, SensorServer):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
         devices = sorted(devices, key=lambda x: x.get_info(rs.camera_info.serial_number))
-        self.config.enable_device(devices[id].get_info(rs.camera_info.serial_number))
+        if device_id is not None:
+            devices = [d for d in devices if d.get_info(rs.camera_info.serial_number) == device_id]
+            if not devices:
+                raise RuntimeError(
+                    f"RealSense serial {device_id!r} not found (use its serial, not /dev/video index)"
+                )
+            id = 0
+        device = devices[id]
+        self.config.enable_device(device.get_info(rs.camera_info.serial_number))
 
         try:
             self.config.enable_stream(
@@ -76,19 +85,61 @@ class RealSenseSensor(Sensor, SensorServer):
                 rs.format.z16,
                 config.fps,
             )
-            self.pipeline.start(self.config)
+            profile = self.pipeline.start(self.config)
         except Exception as e:
             raise RuntimeError(f"Failed to start RealSense pipeline: {e}")
 
         self._realsense_config = config
         self._run_as_server = run_as_server
         self.mount_position = mount_position
+        color_profile = profile.get_stream(rs.stream.color).as_video_stream_profile()
+        depth_profile = profile.get_stream(rs.stream.depth).as_video_stream_profile()
+        extrinsics = depth_profile.get_extrinsics_to(color_profile)
+        self.calibration = {
+            "schema": "realsense.rgbd.v1",
+            "device_name": device.get_info(rs.camera_info.name),
+            "serial_number": device.get_info(rs.camera_info.serial_number),
+            "depth_scale_m": float(profile.get_device().first_depth_sensor().get_depth_scale()),
+            "depth_intrinsics": self._intrinsics(depth_profile),
+            "color_intrinsics": self._intrinsics(color_profile),
+            "depth_to_color": {
+                "rotation": list(extrinsics.rotation),
+                "rotation_layout": "column_major",
+                "translation_m": list(extrinsics.translation),
+            },
+            "depth_coordinate_frame": "depth_optical",
+            "depth_aligned_to_color": False,
+            "invalid_depth_value": 0,
+            "world_extrinsics": None,
+        }
         if self._run_as_server:
             self.start_server(port)
         print(
             f"Done initializing RealSense sensor: "
-            f"{devices[id].get_info(rs.camera_info.serial_number)}"
+            f"{device.get_info(rs.camera_info.serial_number)} (RGB + uint16 depth)"
         )
+
+    @staticmethod
+    def _intrinsics(profile) -> dict[str, Any]:
+        value = profile.get_intrinsics()
+        return {
+            "width": value.width,
+            "height": value.height,
+            "fx": value.fx,
+            "fy": value.fy,
+            "ppx": value.ppx,
+            "ppy": value.ppy,
+            "model": str(value.model),
+            "coeffs": list(value.coeffs),
+        }
+
+    @staticmethod
+    def _frame_info(frame) -> dict[str, Any]:
+        return {
+            "frame_number": int(frame.get_frame_number()),
+            "timestamp_ms": float(frame.get_timestamp()),
+            "timestamp_domain": str(frame.get_frame_timestamp_domain()),
+        }
 
     def read(self) -> dict[str, Any] | None:
         try:
@@ -105,8 +156,9 @@ class RealSenseSensor(Sensor, SensorServer):
             return None
 
         try:
-            color_image = np.asanyarray(color_frame.get_data())
-            depth_image = np.asanyarray(depth_frame.get_data())
+            # Queued messages outlive the SDK frames; own the pixel buffers.
+            color_image = np.asanyarray(color_frame.get_data()).copy()
+            depth_image = np.asanyarray(depth_frame.get_data()).copy()
         except Exception as e:
             print(f"ERROR! Failed to convert frames to numpy arrays: {e}")
             return None
@@ -124,10 +176,23 @@ class RealSenseSensor(Sensor, SensorServer):
             self.mount_position: color_image,
             f"{self.mount_position}_depth": depth_image,
         }
-        return {"timestamps": timestamps, "images": images}
+        return {
+            "timestamps": timestamps,
+            "images": images,
+            "metadata": {
+                self.mount_position: {
+                    "calibration": self.calibration,
+                    "frames": {"color": self._frame_info(color_frame), "depth": self._frame_info(depth_frame)},
+                    "host_received_timestamp_ns": int(current_time * 1_000_000_000),
+                    "host_timestamp_kind": "frameset_receive_time",
+                }
+            },
+        }
 
     def serialize(self, data: dict[str, Any]) -> dict[str, Any]:
-        serialized_msg = ImageMessageSchema(timestamps=data["timestamps"], images=data["images"])
+        serialized_msg = ImageMessageSchema(
+            timestamps=data["timestamps"], images=data["images"], metadata=data.get("metadata", {})
+        )
         return serialized_msg.serialize()
 
     def observation_space(self):

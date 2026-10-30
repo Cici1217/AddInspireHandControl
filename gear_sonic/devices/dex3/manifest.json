@@ -1,0 +1,380 @@
+{
+  "schema": "end_effector.device.v2",
+  "description": {
+    "device_id": "dex3",
+    "version": "1",
+    "label": "Dex3",
+    "physical_joints": [
+      "hand_thumb_0_joint",
+      "hand_thumb_1_joint",
+      "hand_thumb_2_joint",
+      "hand_middle_0_joint",
+      "hand_middle_1_joint",
+      "hand_index_0_joint",
+      "hand_index_1_joint"
+    ],
+    "state_channels": [
+      {
+        "name": "hand_thumb_0_joint",
+        "unit": "rad",
+        "lower": -1.0472,
+        "upper": 1.0472
+      },
+      {
+        "name": "hand_thumb_1_joint",
+        "unit": "rad",
+        "lower": -0.724312,
+        "upper": 1.0472
+      },
+      {
+        "name": "hand_thumb_2_joint",
+        "unit": "rad",
+        "lower": 0.0,
+        "upper": 1.74533
+      },
+      {
+        "name": "hand_middle_0_joint",
+        "unit": "rad",
+        "lower": -1.5708,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_middle_1_joint",
+        "unit": "rad",
+        "lower": -1.74533,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_index_0_joint",
+        "unit": "rad",
+        "lower": -1.5708,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_index_1_joint",
+        "unit": "rad",
+        "lower": -1.74533,
+        "upper": 0.0
+      }
+    ],
+    "action_channels": [
+      {
+        "name": "hand_thumb_0_joint",
+        "unit": "rad",
+        "lower": -1.0472,
+        "upper": 1.0472
+      },
+      {
+        "name": "hand_thumb_1_joint",
+        "unit": "rad",
+        "lower": -0.724312,
+        "upper": 1.0472
+      },
+      {
+        "name": "hand_thumb_2_joint",
+        "unit": "rad",
+        "lower": 0.0,
+        "upper": 1.74533
+      },
+      {
+        "name": "hand_middle_0_joint",
+        "unit": "rad",
+        "lower": -1.5708,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_middle_1_joint",
+        "unit": "rad",
+        "lower": -1.74533,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_index_0_joint",
+        "unit": "rad",
+        "lower": -1.5708,
+        "upper": 0.0
+      },
+      {
+        "name": "hand_index_1_joint",
+        "unit": "rad",
+        "lower": -1.74533,
+        "upper": 0.0
+      }
+    ],
+    "control_mode": "position",
+    "command_hz": 50,
+    "feedback_hz": 50,
+    "stale_after_s": 0.3
+  },
+  "backends": {
+    "sim": {
+      "mode": "sim",
+      "factory": null,
+      "requires": [],
+      "capabilities": [
+        "body",
+        "replay",
+        "scene"
+      ]
+    }
+  },
+  "retargeting": null,
+  "integration": {
+    "kind": "sonic",
+    "sonic_hand": "dex3",
+    "hand_config": false,
+    "default_sim_backend": "sim",
+    "factory": "./integration.py:Dex3SonicIntegration",
+    "policy_compatibility": "Upstream G1 body29 + Dex3 simulation/replay; no registered real driver or optical hand teleop.",
+    "native_hand": "dex3"
+  },
+  "package": {
+    "version": "1.0.0",
+    "resources": {
+      "urdf": {
+        "path": "gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.urdf",
+        "shared": true
+      },
+      "mjcf": {
+        "path": "gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.xml",
+        "shared": true
+      },
+      "scene": {
+        "path": "gear_sonic/data/robot_model/model_data/g1/scene_43dof.xml",
+        "shared": true
+      }
+    },
+    "model": {
+      "factory": "./integration.py:create_model",
+      "dof": 43,
+      "body_dof": 29,
+      "urdf": "urdf",
+      "mjcf": "mjcf",
+      "scene": "scene",
+      "joint_groups": {
+        "left": [
+          {
+            "urdf": "left_hand_thumb_0_joint",
+            "mjcf": "left_hand_thumb_0_joint",
+            "actuator": "left_hand_thumb_0",
+            "limits": [
+              -1.04719755,
+              1.04719755
+            ],
+            "channel": "hand_thumb_0_joint"
+          },
+          {
+            "urdf": "left_hand_thumb_1_joint",
+            "mjcf": "left_hand_thumb_1_joint",
+            "actuator": "left_hand_thumb_1",
+            "limits": [
+              -0.72431163,
+              1.04719755
+            ],
+            "channel": "hand_thumb_1_joint"
+          },
+          {
+            "urdf": "left_hand_thumb_2_joint",
+            "mjcf": "left_hand_thumb_2_joint",
+            "actuator": "left_hand_thumb_2",
+            "limits": [
+              0.0,
+              1.74532925
+            ],
+            "channel": "hand_thumb_2_joint"
+          },
+          {
+            "urdf": "left_hand_middle_0_joint",
+            "mjcf": "left_hand_middle_0_joint",
+            "actuator": "left_hand_middle_0",
+            "limits": [
+              -1.57079632,
+              0.0
+            ],
+            "channel": "hand_middle_0_joint"
+          },
+          {
+            "urdf": "left_hand_middle_1_joint",
+            "mjcf": "left_hand_middle_1_joint",
+            "actuator": "left_hand_middle_1",
+            "limits": [
+              -1.74532925,
+              0.0
+            ],
+            "channel": "hand_middle_1_joint"
+          },
+          {
+            "urdf": "left_hand_index_0_joint",
+            "mjcf": "left_hand_index_0_joint",
+            "actuator": "left_hand_index_0",
+            "limits": [
+              -1.57079632,
+              0.0
+            ],
+            "channel": "hand_index_0_joint"
+          },
+          {
+            "urdf": "left_hand_index_1_joint",
+            "mjcf": "left_hand_index_1_joint",
+            "actuator": "left_hand_index_1",
+            "limits": [
+              -1.74532925,
+              0.0
+            ],
+            "channel": "hand_index_1_joint"
+          }
+        ],
+        "right": [
+          {
+            "urdf": "right_hand_thumb_0_joint",
+            "mjcf": "right_hand_thumb_0_joint",
+            "actuator": "right_hand_thumb_0",
+            "limits": [
+              -1.04719755,
+              1.04719755
+            ],
+            "channel": "hand_thumb_0_joint"
+          },
+          {
+            "urdf": "right_hand_thumb_1_joint",
+            "mjcf": "right_hand_thumb_1_joint",
+            "actuator": "right_hand_thumb_1",
+            "limits": [
+              -1.04719755,
+              0.72431163
+            ],
+            "channel": "hand_thumb_1_joint"
+          },
+          {
+            "urdf": "right_hand_thumb_2_joint",
+            "mjcf": "right_hand_thumb_2_joint",
+            "actuator": "right_hand_thumb_2",
+            "limits": [
+              -1.74532925,
+              0.0
+            ],
+            "channel": "hand_thumb_2_joint"
+          },
+          {
+            "urdf": "right_hand_middle_0_joint",
+            "mjcf": "right_hand_middle_0_joint",
+            "actuator": "right_hand_middle_0",
+            "limits": [
+              0.0,
+              1.57079632
+            ],
+            "channel": "hand_middle_0_joint"
+          },
+          {
+            "urdf": "right_hand_middle_1_joint",
+            "mjcf": "right_hand_middle_1_joint",
+            "actuator": "right_hand_middle_1",
+            "limits": [
+              0.0,
+              1.74532925
+            ],
+            "channel": "hand_middle_1_joint"
+          },
+          {
+            "urdf": "right_hand_index_0_joint",
+            "mjcf": "right_hand_index_0_joint",
+            "actuator": "right_hand_index_0",
+            "limits": [
+              0.0,
+              1.57079632
+            ],
+            "channel": "hand_index_0_joint"
+          },
+          {
+            "urdf": "right_hand_index_1_joint",
+            "mjcf": "right_hand_index_1_joint",
+            "actuator": "right_hand_index_1",
+            "limits": [
+              0.0,
+              1.74532925
+            ],
+            "channel": "hand_index_1_joint"
+          }
+        ]
+      },
+      "mounts": {
+        "left": {
+          "parent_frame": "left_wrist_pitch_link",
+          "frame": "left_wrist_yaw_link",
+          "xyz": [
+            0.046,
+            0.0,
+            0.0
+          ],
+          "rpy": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "right": {
+          "parent_frame": "right_wrist_pitch_link",
+          "frame": "right_wrist_yaw_link",
+          "xyz": [
+            0.046,
+            0.0,
+            0.0
+          ],
+          "rpy": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "physical_groups": {
+        "left": [
+          "left_hand_thumb_0_joint",
+          "left_hand_thumb_1_joint",
+          "left_hand_thumb_2_joint",
+          "left_hand_middle_0_joint",
+          "left_hand_middle_1_joint",
+          "left_hand_index_0_joint",
+          "left_hand_index_1_joint"
+        ],
+        "right": [
+          "right_hand_thumb_0_joint",
+          "right_hand_thumb_1_joint",
+          "right_hand_thumb_2_joint",
+          "right_hand_middle_0_joint",
+          "right_hand_middle_1_joint",
+          "right_hand_index_0_joint",
+          "right_hand_index_1_joint"
+        ]
+      },
+      "requires": [
+        "pinocchio",
+        "mujoco"
+      ]
+    },
+    "defaults": {
+      "mounts": [
+        "left",
+        "right"
+      ],
+      "options": {}
+    },
+    "options": [
+      {
+        "key": "waist_location",
+        "type": "select",
+        "options": [
+          "lower_body",
+          "upper_body",
+          "lower_and_upper_body"
+        ],
+        "default": "lower_body"
+      },
+      {
+        "key": "high_elbow_pose",
+        "type": "boolean",
+        "default": false
+      }
+    ]
+  }
+}
